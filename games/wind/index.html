@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WIND BALL: CASUAL MATCH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+        
+        body {
+            margin: 0;
+            background-color: #050505;
+            overflow: hidden;
+            touch-action: none;
+            font-family: 'Orbitron', sans-serif;
+            color: white;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: #fff;
+            opacity: 0;
+            pointer-events: none;
+            text-align: center;
+            z-index: 20;
+        }
+
+        .score-box {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div class="score-box" style="border-color: #ff0055;">CPU: <span id="cpu-score">0</span></div>
+    <div class="score-box" style="border-color: #00f2ff;">YOU: <span id="player-score">0</span></div>
+</div>
+
+<div id="overlay">GOAL!!</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const cpuScoreEl = document.getElementById('cpu-score');
+    const playerScoreEl = document.getElementById('player-score');
+    const overlay = document.getElementById('overlay');
+
+    let VW, VH;
+    function resize() {
+        VW = window.innerWidth;
+        VH = window.innerHeight;
+        canvas.width = VW;
+        canvas.height = VH;
+        initPositions();
+    }
+    window.addEventListener('resize', resize);
+
+    let scores = { player: 0, cpu: 0 };
+    let frame = 0;
+
+    const ball = {
+        x: 0, y: 0, vx: 0, vy: 0,
+        radius: 14,
+        friction: 0.982 // 摩擦を少し増やして制御しやすく
+    };
+
+    const player = {
+        x: 0, y: 0,
+        radius: 18,
+        windRadius: 140, // プレイヤーの風の範囲を少し拡大
+        power: 1.0,      // プレイヤーを強化
+        color: '#00f2ff'
+    };
+
+    const cpu = {
+        x: 0, y: 0,
+        radius: 18,
+        windRadius: 120,
+        power: 0.6,      // CPUの風を大幅に弱体化
+        color: '#ff0055',
+        skillErrorX: 0,  // CPUの狙いのズレ
+        reactionDelay: 0 // 反応の遅れ
+    };
+
+    let blowers = [];
+
+    function initPositions() {
+        ball.x = VW / 2;
+        ball.y = VH / 2;
+        ball.vx = 0;
+        ball.vy = 0;
+        player.x = VW / 2;
+        player.y = VH * 0.8;
+        cpu.x = VW / 2;
+        cpu.y = VH * 0.2;
+
+        const margin = 20;
+        blowers = [
+            { x: margin, y: margin, angle: Math.PI / 4, power: 1.0 },
+            { x: VW - margin, y: margin, angle: Math.PI * 3 / 4, power: 1.0 },
+            { x: margin, y: VH - margin, angle: -Math.PI / 4, power: 1.0 },
+            { x: VW - margin, y: VH - margin, angle: -Math.PI * 3 / 4, power: 1.0 }
+        ];
+    }
+
+    const handleMove = (e) => {
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        player.x = clientX;
+        player.y = clientY;
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove);
+
+    let particles = [];
+    function spawnParticle(x, y, vx, vy, color, life = 20) {
+        particles.push({ x, y, vx, vy, color, life, maxLife: life });
+    }
+
+    function applyWind(source, target, isBlower = false) {
+        const dx = target.x - source.x;
+        const dy = target.y - source.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        const radius = isBlower ? 180 : source.windRadius;
+        if (dist < radius) {
+            const angle = isBlower ? source.angle : Math.atan2(dy, dx);
+            const force = (1 - dist / radius) * source.power;
+            target.vx += Math.cos(angle) * force;
+            target.vy += Math.sin(angle) * force;
+            
+            if (frame % 3 === 0) {
+                spawnParticle(source.x, source.y, Math.cos(angle) * 6, Math.sin(angle) * 6, isBlower ? '#ffffff' : source.color, 15);
+            }
+        }
+    }
+
+    function updateCPU() {
+        // AIの弱体化: 定期的に狙いを外させる
+        if (frame % 60 === 0) {
+            cpu.skillErrorX = (Math.random() - 0.5) * 120; // 狙いを左右にズラす
+        }
+
+        // ボールの現在地ではなく、少し前の位置を追わせる（反応の遅れ）
+        let tx = ball.x + cpu.skillErrorX;
+        let ty = ball.y - 100;
+
+        if (ball.y < cpu.y) {
+            tx = ball.x > VW / 2 ? ball.x - 100 : ball.x + 100;
+            ty = ball.y - 50;
+        }
+
+        const dx = tx - cpu.x;
+        const dy = ty - cpu.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const speed = 3.5; // 移動速度を落とした
+
+        if (dist > 5) {
+            cpu.x += (dx / dist) * speed;
+            cpu.y += (dy / dist) * speed;
+        }
+    }
+
+    function update() {
+        frame++;
+        updateCPU();
+
+        applyWind(player, ball);
+        applyWind(cpu, ball);
+        blowers.forEach(b => applyWind(b, ball, true));
+
+        ball.vx *= ball.friction;
+        ball.vy *= ball.friction;
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        if (ball.x < ball.radius || ball.x > VW - ball.radius) {
+            ball.vx *= -0.7;
+            ball.x = ball.x < ball.radius ? ball.radius : VW - ball.radius;
+        }
+
+        const goalWidth = 140;
+        const isCenter = Math.abs(ball.x - VW / 2) < goalWidth / 2;
+        if (isCenter) {
+            if (ball.y < 0) scorePoint('player');
+            if (ball.y > VH) scorePoint('cpu');
+        } else {
+            if (ball.y < ball.radius || ball.y > VH - ball.radius) {
+                ball.vy *= -0.7;
+                ball.y = ball.y < ball.radius ? ball.radius : VH - ball.radius;
+            }
+        }
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+    }
+
+    function scorePoint(winner) {
+        scores[winner]++;
+        playerScoreEl.innerText = scores.player;
+        cpuScoreEl.innerText = scores.cpu;
+        
+        overlay.innerText = winner === 'player' ? 'GOAL!!' : 'POINT LOST';
+        overlay.style.color = winner === 'player' ? '#00f2ff' : '#ff0055';
+        overlay.style.opacity = 1;
+        
+        setTimeout(() => {
+            initPositions();
+            overlay.style.opacity = 0;
+        }, 1200);
+    }
+
+    function draw() {
+        ctx.fillStyle = '#050505';
+        ctx.fillRect(0, 0, VW, VH);
+
+        ctx.strokeStyle = '#151515';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, VH/2); ctx.lineTo(VW, VH/2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(VW/2, VH/2, 80, 0, Math.PI*2);
+        ctx.stroke();
+
+        const gw = 140;
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 15; ctx.shadowColor = '#00f2ff';
+        ctx.strokeStyle = '#00f2ff';
+        ctx.strokeRect(VW/2 - gw/2, 0, gw, 10);
+        ctx.shadowBlur = 15; ctx.shadowColor = '#ff0055';
+        ctx.strokeStyle = '#ff0055';
+        ctx.strokeRect(VW/2 - gw/2, VH-10, gw, 10);
+        ctx.shadowBlur = 0;
+
+        blowers.forEach(b => {
+            ctx.fillStyle = '#222';
+            ctx.beginPath(); ctx.arc(b.x, b.y, 12, 0, Math.PI * 2); ctx.fill();
+        });
+
+        particles.forEach(p => {
+            ctx.globalAlpha = p.life / p.maxLife;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, 2, 2);
+        });
+        ctx.globalAlpha = 1.0;
+
+        ctx.shadowBlur = 20; ctx.shadowColor = '#fff';
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        [player, cpu].forEach(e => {
+            ctx.strokeStyle = e.color;
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI*2); ctx.stroke();
+            ctx.fillStyle = e.color;
+            ctx.beginPath(); ctx.arc(e.x, e.y, 4, 0, Math.PI*2); ctx.fill();
+        });
+    }
+
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    resize();
+    loop();
+</script>
+</body>
+</html>

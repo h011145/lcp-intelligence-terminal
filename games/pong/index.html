@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invader Pong - Name Entry System</title>
+    <style>
+        body { background: #000; color: #fff; font-family: 'Courier New', Courier, monospace; text-align: center; margin: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
+        canvas { background: #050000; border: 2px solid #0f0; display: block; touch-action: none; box-shadow: 0 0 20px rgba(0, 255, 0, 0.4); cursor: none; }
+        #ui { margin-bottom: 10px; width: 450px; display: flex; justify-content: space-between; align-items: center; }
+        #msg { position: absolute; background: rgba(0,0,0,0.95); padding: 25px; border: 3px solid #0f0; z-index: 10; min-width: 300px; }
+        button { background: #0f0; color: #000; border: none; padding: 12px 24px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 16px; margin-top: 10px; }
+        button:hover { background: #fff; }
+        input { background: #000; color: #0f0; border: 1px solid #0f0; padding: 5px; text-align: center; font-family: inherit; font-size: 20px; width: 100px; margin-bottom: 10px; text-transform: uppercase; }
+        .score { font-size: 20px; color: #0f0; }
+        .lives { font-size: 20px; color: #f00; }
+        .stage-info { font-size: 18px; color: #ff0; }
+        .warning { color: #f00; font-size: 12px; animation: blink 0.5s infinite; position: absolute; top: 60px; }
+        .ranking { font-size: 12px; color: #aaa; margin-top: 15px; text-align: left; border-top: 1px solid #333; padding-top: 10px; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <div class="score">SCORE: <span id="score-val">0</span></div>
+        <div class="stage-info">STAGE: <span id="stage-val">1</span></div>
+        <div class="lives" id="lives-display">♥♥♥</div>
+    </div>
+    <div id="warning-text" class="warning" style="visibility: hidden;">INVADERS ARE LANDING!</div>
+
+    <canvas id="game" width="450" height="350"></canvas>
+
+    <div id="msg">
+        <h2 id="msg-title" style="color:#0f0; margin:0 0 10px 0;">INVADER PONG</h2>
+        <div id="msg-content">
+            <p id="msg-body" style="font-size: 14px;">インベーダーを全滅させるか、<br>敵陣を突破して次のステージへ進め！</p>
+        </div>
+        <div id="name-entry" style="display: none;">
+            <p>NEW HIGH SCORE!</p>
+            <input type="text" id="player-name" maxlength="3" placeholder="AAA"><br>
+        </div>
+        <button id="start-btn">迎撃開始（START）</button>
+        <div id="ranking-list" class="ranking"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const startBtn = document.getElementById('start-btn');
+        const msg = document.getElementById('msg');
+        const msgTitle = document.getElementById('msg-title');
+        const msgBody = document.getElementById('msg-body');
+        const scoreVal = document.getElementById('score-val');
+        const stageVal = document.getElementById('stage-val');
+        const warningText = document.getElementById('warning-text');
+        const livesDisplay = document.getElementById('lives-display');
+        const nameEntryDiv = document.getElementById('name-entry');
+        const playerNameInput = document.getElementById('player-name');
+        const rankingList = document.getElementById('ranking-list');
+
+        let playing = false;
+        let score = 0;
+        let lives = 3;
+        let stage = 1;
+        
+        let invaderYOffset = 0;
+        let invaderXOffset = 0;
+        let baseInvaderSpeedY = 0.12;
+        let moveCounter = 0;
+        let mouseY = 175;
+        let waitTimer = 0;
+
+        const ball = { x: 225, y: 175, dx: 3, dy: 3, r: 5, baseSpeed: 3.5 };
+        const p1 = { y: 145, h: 60, w: 8 }; 
+        const p2 = { y: 145, h: 60, w: 8 }; 
+
+        const fighter = { x: 225, y: 335, w: 20, h: 10, speed: 2, dir: 1, shootTimer: 0 };
+        const bullets = [];
+
+        const invaders = [];
+        const rows = 4;
+        const cols = 5;
+        const invW = 18;
+        const invH = 15;
+
+        // ランキング読み込み
+        function getRanking() {
+            const data = localStorage.getItem('invader_pong_ranking');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveScore(name, score) {
+            let ranking = getRanking();
+            ranking.push({ name: name.toUpperCase() || 'NAN', score: score, stage: stage });
+            ranking.sort((a, b) => b.score - a.score);
+            ranking = ranking.slice(0, 5); // TOP 5
+            localStorage.setItem('invader_pong_ranking', JSON.stringify(ranking));
+        }
+
+        function displayRanking() {
+            const ranking = getRanking();
+            if (ranking.length === 0) {
+                rankingList.innerHTML = "";
+                return;
+            }
+            let html = "<b>TOP DEFENDERS:</b><br>";
+            ranking.forEach((r, i) => {
+                html += `${i+1}. ${r.name} - ${r.score} (STG ${r.stage})<br>`;
+            });
+            rankingList.innerHTML = html;
+        }
+
+        function initInvaders() {
+            invaders.length = 0;
+            invaderYOffset = 0;
+            invaderXOffset = 0;
+            moveCounter = 0;
+            bullets.length = 0;
+            for(let r=0; r<rows; r++) {
+                for(let c=0; c<cols; c++) {
+                    invaders.push({
+                        relX: (c * 35) - (cols * 17.5) + 10,
+                        relY: (r * 25) + 30,
+                        active: true
+                    });
+                }
+            }
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseY = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            mouseY = e.touches[0].clientY - rect.top;
+        }, { passive: false });
+
+        startBtn.onclick = () => {
+            // 名前入力が表示されている場合は保存処理
+            if (nameEntryDiv.style.display === 'block') {
+                saveScore(playerNameInput.value, score);
+                nameEntryDiv.style.display = 'none';
+                playerNameInput.value = "";
+                // 保存後に再度スタート画面
+                gameOverStateDisplay();
+                return;
+            }
+
+            if (lives <= 0) {
+                stage = 1;
+                score = 0;
+                lives = 3;
+                ball.baseSpeed = 3.5;
+            }
+            msg.style.display = 'none';
+            playing = true;
+            scoreVal.innerText = score;
+            stageVal.innerText = stage;
+            updateLivesUI();
+            resetBall();
+            initInvaders();
+            warningText.style.visibility = 'hidden';
+            canvas.style.cursor = 'none';
+        };
+
+        function resetBall() {
+            ball.x = 60; 
+            ball.y = 175;
+            const currentSpeed = ball.baseSpeed + (stage * 0.2);
+            ball.dx = currentSpeed; 
+            ball.dy = (Math.random() - 0.5) * (currentSpeed * 1.5);
+            waitTimer = 60; 
+        }
+
+        function updateLivesUI() {
+            livesDisplay.innerText = "♥".repeat(lives);
+        }
+
+        function nextStage() {
+            playing = false;
+            stage++;
+            if (lives < 3) lives++;
+            canvas.style.cursor = 'default';
+            
+            msgTitle.innerText = "STAGE CLEAR!";
+            msgTitle.style.color = "#ff0";
+            msgBody.innerHTML = `NEXT STAGE: ${stage}<br>インベーダーの速度が上昇中...`;
+            startBtn.innerText = "次へ（NEXT）";
+            nameEntryDiv.style.display = 'none';
+            msg.style.display = 'block';
+            displayRanking();
+        }
+
+        function update() {
+            if (!playing) return;
+
+            if (waitTimer > 0) {
+                waitTimer--;
+                return;
+            }
+
+            moveCounter += 0.05;
+            invaderXOffset = Math.sin(moveCounter) * 20;
+            invaderYOffset += baseInvaderSpeedY + (stage * 0.05);
+
+            if (invaderYOffset > 130) {
+                warningText.style.visibility = 'visible';
+            }
+
+            fighter.x += fighter.speed * fighter.dir;
+            if (fighter.x < 50 || fighter.x > 400) fighter.dir *= -1;
+
+            fighter.shootTimer++;
+            if (fighter.shootTimer > Math.max(20, 45 - stage)) {
+                bullets.push({ x: fighter.x + fighter.w/2, y: fighter.y, speed: 4 });
+                fighter.shootTimer = 0;
+            }
+
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= bullets[i].speed;
+                if (bullets[i].y < 0) bullets.splice(i, 1);
+            }
+
+            p1.y = mouseY - p1.h / 2;
+            p1.y = Math.max(0, Math.min(canvas.height - p1.h, p1.y));
+
+            const cpuEase = Math.min(0.98, 0.9 + (stage * 0.01));
+            p2.y += (ball.y - (p2.y + p2.h/2)) * cpuEase;
+            p2.y = Math.max(0, Math.min(canvas.height - p2.h, p2.y));
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.y < 0 || ball.y > canvas.height) ball.dy *= -1;
+
+            let activeCount = 0;
+            let lowestY = 0;
+            invaders.forEach(inv => {
+                if (inv.active) {
+                    activeCount++;
+                    let actualX = 225 + inv.relX + invaderXOffset;
+                    let actualY = inv.relY + invaderYOffset;
+                    lowestY = Math.max(lowestY, actualY + invH);
+
+                    if (ball.x > actualX && ball.x < actualX + invW && ball.y > actualY && ball.y < actualY + invH) {
+                        inv.active = false;
+                        score += 100;
+                        scoreVal.innerText = score;
+                        ball.dx *= -1.03;
+                    }
+
+                    bullets.forEach((bullet, bIdx) => {
+                        if (bullet.x > actualX && bullet.x < actualX + invW && bullet.y > actualY && bullet.y < actualY + invH) {
+                            inv.active = false;
+                            score += 50;
+                            scoreVal.innerText = score;
+                            bullets.splice(bIdx, 1);
+                        }
+                    });
+                }
+            });
+
+            if (activeCount === 0) {
+                score += 1000;
+                nextStage();
+                return;
+            }
+
+            if (lowestY >= 330) {
+                triggerGameOver("BASE DESTROYED");
+                return;
+            }
+
+            if (ball.x < 18 + p1.w && ball.x > 10 && ball.y > p1.y && ball.y < p1.y + p1.h) {
+                if (ball.dx < 0) {
+                    ball.dx = Math.abs(ball.dx);
+                    ball.dy = (ball.y - (p1.y + p1.h/2)) * 0.25;
+                }
+            }
+
+            if (ball.x > 432 - p2.w && ball.x < 440 && ball.y > p2.y && ball.y < p2.y + p2.h) {
+                if (ball.dx > 0) ball.dx = -Math.abs(ball.dx);
+            }
+
+            if (ball.x < 0) {
+                lives--;
+                updateLivesUI();
+                if (lives <= 0) {
+                    triggerGameOver("DEFENSE FAILED");
+                } else {
+                    resetBall();
+                }
+            }
+            
+            if (ball.x > 450) {
+                score += 500;
+                nextStage();
+            }
+        }
+
+        function triggerGameOver(reason) {
+            playing = false;
+            canvas.style.cursor = 'default';
+            
+            msgTitle.innerText = "GAME OVER";
+            msgTitle.style.color = "#f00";
+            msgBody.innerHTML = `${reason}<br>FINAL SCORE: ${score}`;
+            
+            // スコアがTOP5に入るかチェック
+            const ranking = getRanking();
+            const isHighScore = ranking.length < 5 || score > ranking[ranking.length - 1].score;
+
+            if (isHighScore) {
+                nameEntryDiv.style.display = 'block';
+                startBtn.innerText = "記録を保存（SAVE）";
+            } else {
+                gameOverStateDisplay();
+            }
+            
+            msg.style.display = 'block';
+            displayRanking();
+        }
+
+        function gameOverStateDisplay() {
+            nameEntryDiv.style.display = 'none';
+            startBtn.innerText = "再契約（RETRY）";
+            displayRanking();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "#0f0";
+            ctx.fillRect(10, p1.y, p1.w, p1.h);
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(432, p2.y, p2.w, p2.h);
+            
+            invaders.forEach(inv => {
+                if (inv.active) {
+                    let actualX = 225 + inv.relX + invaderXOffset;
+                    let actualY = inv.relY + invaderYOffset;
+                    ctx.fillStyle = "#0f0";
+                    ctx.fillRect(actualX + 4, actualY, 10, 3);
+                    ctx.fillRect(actualX, actualY + 3, 18, 6);
+                    ctx.fillRect(actualX + 3, actualY + 9, 3, 4);
+                    ctx.fillRect(actualX + 12, actualY + 9, 3, 4);
+                }
+            });
+
+            ctx.fillStyle = "#0af";
+            ctx.fillRect(fighter.x, fighter.y, fighter.w, fighter.h);
+            ctx.fillRect(fighter.x + 8, fighter.y - 4, 4, 4);
+
+            ctx.fillStyle = "#ff0";
+            bullets.forEach(bullet => {
+                ctx.fillRect(bullet.x - 1, bullet.y, 2, 6);
+            });
+
+            ctx.fillStyle = (waitTimer > 0 && Math.floor(waitTimer/10) % 2 === 0) ? "#555" : "#fff";
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+            ctx.fill();
+
+            ctx.strokeStyle = "#600";
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath(); ctx.moveTo(0, 330); ctx.lineTo(450, 330); ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+        
+        // 初期状態
+        displayRanking();
+        loop();
+    </script>
+</body>
+</html>
