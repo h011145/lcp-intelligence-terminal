@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Current War 1880: PC Deluxe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Press+Start+2P&display=swap');
+
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            cursor: crosshair;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: auto;
+        }
+
+        /* レトロフューチャーなスキャンラインとノイズ */
+        .vfx-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
+                radial-gradient(circle, transparent 20%, black 150%);
+            background-size: 100% 4px, 100% 100%;
+            opacity: 0.6;
+        }
+
+        .ui-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            padding: 2rem;
+            pointer-events: none;
+            z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .meter-box {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #333;
+            padding: 1.5rem;
+            min-width: 350px;
+            box-shadow: 0 0 30px rgba(0,0,0,1);
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 12px;
+            transition: width 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            position: relative;
+        }
+
+        .ac-glow { box-shadow: 0 0 20px #3b82f6; border: 1px solid #60a5fa; }
+        .dc-glow { box-shadow: 0 0 20px #ef4444; border: 1px solid #f87171; }
+
+        #switchAlert {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8rem;
+            font-family: 'Press Start 2P', cursive;
+            color: #fff;
+            opacity: 0;
+            z-index: 200;
+            text-shadow: 0 0 40px #fff;
+        }
+
+        .switching {
+            opacity: 1 !important;
+            animation: glitch 0.2s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(-50%, -50%) skew(0deg); }
+            20% { transform: translate(-52%, -48%) skew(5deg); }
+            40% { transform: translate(-48%, -52%) skew(-10deg); }
+            60% { transform: translate(-51%, -49%) skew(2deg); }
+            100% { transform: translate(-50%, -50%) skew(0deg); }
+        }
+
+        .controls-info {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            letter-spacing: 3px;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="vfx-layer"></div>
+    <div id="switchAlert">SWITCH</div>
+
+    <div class="ui-container">
+        <!-- Tesla Side -->
+        <div class="meter-box border-blue-900">
+            <div class="flex justify-between items-end mb-2">
+                <span class="text-blue-400 font-black tracking-tighter text-2xl">TESLA AC</span>
+                <span class="text-blue-200 text-sm font-mono"><span id="acPercent">0</span>%</span>
+            </div>
+            <div class="w-full bg-blue-950/50 rounded-full h-4 p-0.5 overflow-hidden">
+                <div id="acMeter" class="meter-fill bg-blue-500 ac-glow rounded-full" style="width: 0%"></div>
+            </div>
+            <div class="mt-2 text-[10px] text-blue-700 font-bold uppercase">Panels: <span id="acPanels">0</span></div>
+        </div>
+
+        <div class="text-center pt-4">
+            <h1 class="text-yellow-500 font-black italic tracking-widest text-xl mb-1">WAR OF CURRENTS</h1>
+            <div class="h-1 w-20 bg-yellow-600 mx-auto"></div>
+        </div>
+
+        <!-- Edison Side -->
+        <div class="meter-box border-red-900 text-right">
+            <div class="flex justify-between items-end mb-2">
+                <span class="text-red-200 text-sm font-mono"><span id="dcPercent">0</span>%</span>
+                <span class="text-red-500 font-black tracking-tighter text-2xl">EDISON DC</span>
+            </div>
+            <div class="w-full bg-red-950/50 rounded-full h-4 p-0.5 overflow-hidden">
+                <div id="dcMeter" class="meter-fill bg-red-600 dc-glow rounded-full ml-auto" style="width: 0%"></div>
+            </div>
+            <div class="mt-2 text-[10px] text-red-700 font-bold uppercase">Panels: <span id="dcPanels">0</span></div>
+        </div>
+    </div>
+
+    <div class="controls-info">MOVE: MOUSE / A D | FIRE: LEFT CLICK / SPACE</div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="gameOverModal" class="fixed inset-0 bg-black/95 z-[1000] hidden flex flex-col items-center justify-center p-10 text-center">
+        <h2 id="winMessage" class="text-8xl font-black mb-6 italic italic"></h2>
+        <p id="winSubMessage" class="text-xl text-slate-500 mb-12 max-w-2xl"></p>
+        <button onclick="location.reload()" class="px-20 py-8 bg-white text-black font-black text-2xl hover:bg-yellow-500 transition-all transform hover:scale-110">REBOOT SYSTEM</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const switchAlert = document.getElementById('switchAlert');
+        
+        let acProgress = 0, dcProgress = 0, lastSwitch = 0;
+        let gameActive = true, isFlipped = false; 
+
+        const panels = [], balls = [], bullets = [], particles = [];
+        // PC向けにパネル密度を大幅アップ (12x14 = 168パネル)
+        const gridCols = 12, gridRows = 14;
+
+        const player = { x: 0, y: 0, w: 100, h: 30, speed: 15, color: '#3b82f6', type: 'AC' };
+        const enemy = { x: 0, y: 0, w: 100, h: 30, speed: 8, color: '#ef4444', type: 'DC' };
+
+        const keys = {};
+
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const padding = 50, yStart = 280, yEnd = canvas.height - 280;
+            const cellW = (canvas.width - padding*2) / gridCols, cellH = (yEnd - yStart) / gridRows;
+
+            panels.length = 0;
+            for(let r=0; r<gridRows; r++) {
+                for(let c=0; c<gridCols; c++) {
+                    panels.push({
+                        x: padding + c * cellW, y: yStart + r * cellH,
+                        w: cellW - 6, h: cellH - 6,
+                        state: Math.random() > 0.5 ? 'AC' : 'DC',
+                        intensity: 0 // 発光演出用
+                    });
+                }
+            }
+            player.x = canvas.width/2 - player.w/2;
+            enemy.x = canvas.width/2 - enemy.w/2;
+            updatePos();
+        }
+
+        function updatePos() {
+            if (!isFlipped) { player.y = canvas.height - 200; enemy.y = 200; }
+            else { player.y = 200; enemy.y = canvas.height - 200; }
+        }
+
+        class Ball {
+            constructor(type) {
+                this.type = type;
+                this.radius = 20;
+                this.x = type === 'AC' ? 100 : canvas.width - 100;
+                this.y = canvas.height / 2;
+                this.vx = (type === 'AC' ? 1 : -1) * (5 + Math.random() * 4);
+                this.vy = (Math.random() - 0.5) * 15;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < this.radius || this.x > canvas.width - this.radius) this.vx *= -1;
+                if (this.y < 260 || this.y > canvas.height - 260) this.vy *= -1;
+                
+                panels.forEach(p => {
+                    if (this.x > p.x && this.x < p.x + p.w && this.y > p.y && this.y < p.y + p.h) {
+                        if (p.state !== this.type) {
+                            p.state = this.type;
+                            p.intensity = 1.0; // 塗り替えた時に光る
+                            spawnParticles(this.x, this.y, this.type === 'AC' ? '#3b82f6' : '#ef4444', 3);
+                        }
+                    }
+                });
+            }
+            draw() {
+                const color = this.type === 'AC' ? '#3b82f6' : '#ef4444';
+                ctx.save();
+                ctx.shadowBlur = 30; ctx.shadowColor = color;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+                ctx.fill();
+                // 内部コア
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 0.4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class Bullet {
+            constructor(x, y, vy, color) { this.x = x; this.y = y; this.vy = vy; this.w = 6; this.h = 24; this.color = color; }
+            update() { this.y += this.vy; }
+            draw() { 
+                ctx.save();
+                ctx.fillStyle = '#fff'; 
+                ctx.shadowBlur = 15; ctx.shadowColor = this.color;
+                ctx.fillRect(this.x - this.w/2, this.y, this.w, this.h);
+                ctx.restore();
+            }
+        }
+
+        function spawnParticles(x, y, color, count=15) {
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x, y, 
+                    vx: (Math.random()-0.5)*15, 
+                    vy: (Math.random()-0.5)*15, 
+                    size: Math.random() * 4 + 1,
+                    life: 1.0, 
+                    color
+                });
+            }
+        }
+
+        function fire(f, d) { 
+            bullets.push(new Bullet(f.x + f.w/2, f.y + (d > 0 ? f.h : -24), d * 22, f.color)); 
+            spawnParticles(f.x + f.w/2, f.y + (d > 0 ? f.h : 0), f.color, 5);
+        }
+
+        function drawBackground() {
+            // 背景の電子回路風グリッド
+            ctx.strokeStyle = '#111';
+            ctx.lineWidth = 1;
+            for(let i=0; i<canvas.width; i+=100) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for(let i=0; i<canvas.height; i+=100) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawBackground();
+
+            // Controls
+            if (keys['KeyA'] || keys['ArrowLeft']) player.x -= player.speed;
+            if (keys['KeyD'] || keys['ArrowRight']) player.x += player.speed;
+            player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
+
+            // Enemy AI
+            const targets = balls.filter(b => b.type === 'AC');
+            if (targets.length) {
+                const t = targets[Math.floor(Math.random() * targets.length)];
+                const ex = enemy.x + enemy.w/2;
+                if (ex < t.x - 10) enemy.x += enemy.speed;
+                else if (ex > t.x + 10) enemy.x -= enemy.speed;
+                if (Math.abs(ex - t.x) < 50 && Math.random() < 0.05) fire(enemy, isFlipped ? -1 : 1);
+            }
+
+            // Panels
+            let ac = 0, dc = 0;
+            panels.forEach(p => {
+                const baseColor = p.state === 'AC' ? [20, 40, 100] : [100, 20, 20];
+                const alpha = 0.3 + (p.intensity * 0.7);
+                ctx.fillStyle = `rgba(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]}, ${alpha})`;
+                ctx.strokeStyle = p.state === 'AC' ? '#3b82f6' : '#ef4444';
+                ctx.lineWidth = p.intensity > 0.1 ? 2 : 0.5;
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                if (p.intensity > 0.1) ctx.strokeRect(p.x, p.y, p.w, p.h);
+                
+                if (p.intensity > 0) p.intensity *= 0.95;
+                if (p.state === 'AC') ac++; else dc++;
+            });
+
+            // Entities (Fighters)
+            ctx.save();
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = player.color;
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.w, player.h);
+            ctx.shadowColor = enemy.color;
+            ctx.fillStyle = enemy.color;
+            ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+            ctx.restore();
+
+            // Balls & Bullets
+            for(let i=balls.length-1; i>=0; i--) { balls[i].update(); balls[i].draw(); }
+            for(let i=bullets.length-1; i>=0; i--) {
+                const b = bullets[i]; b.update(); b.draw();
+                for(let j=balls.length-1; j>=0; j--) {
+                    const t = balls[j];
+                    if (b.x > t.x - t.radius && b.x < t.x + t.radius && b.y > t.y - t.radius && b.y < t.y + t.radius) {
+                        spawnParticles(t.x, t.y, t.type === 'AC' ? '#3b82f6' : '#ef4444', 30);
+                        balls.splice(j, 1); bullets.splice(i, 1); break;
+                    }
+                }
+                if (b.y < -50 || b.y > canvas.height + 50) bullets.splice(i, 1);
+            }
+
+            // Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+            ctx.globalAlpha = 1;
+
+            // Progression
+            acProgress += (ac/panels.length) * 0.08; dcProgress += (dc/panels.length) * 0.08;
+            document.getElementById('acMeter').style.width = Math.min(100, acProgress) + '%';
+            document.getElementById('dcMeter').style.width = Math.min(100, dcProgress) + '%';
+            document.getElementById('acPercent').innerText = Math.floor(acProgress);
+            document.getElementById('dcPercent').innerText = Math.floor(dcProgress);
+            document.getElementById('acPanels').innerText = ac;
+            document.getElementById('dcPanels').innerText = dc;
+
+            // Switch
+            const max = Math.max(acProgress, dcProgress);
+            if (max >= lastSwitch + 10) {
+                lastSwitch += 10; isFlipped = !isFlipped; updatePos();
+                switchAlert.classList.add('switching');
+                setTimeout(() => switchAlert.classList.remove('switching'), 1200);
+            }
+
+            if (acProgress >= 100) endGame('TESLA');
+            else if (dcProgress >= 100) endGame('EDISON');
+            else requestAnimationFrame(gameLoop);
+        }
+
+        function endGame(w) {
+            gameActive = false;
+            document.getElementById('gameOverModal').classList.remove('hidden');
+            document.getElementById('winMessage').innerText = w + ' VICTORIOUS';
+            document.getElementById('winMessage').style.color = w === 'TESLA' ? '#3b82f6' : '#ef4444';
+            document.getElementById('winSubMessage').innerText = w === 'TESLA' 
+                ? 'AC POWER HAS CONQUERED THE WORLD.\nTHE INDUSTRIAL AGE HAS BEEN REVOLUTIONIZED BY NICOLA TESLA.' 
+                : 'THOMAS EDISON ESTABLISHES A MONOPOLY.\nTHE FUTURE WILL BE POWERED BY DIRECT CURRENT.';
+        }
+
+        setInterval(() => {
+            if (!gameActive) return;
+            if (balls.filter(b => b.type === 'AC').length < 5) balls.push(new Ball('AC'));
+            if (balls.filter(b => b.type === 'DC').length < 5) balls.push(new Ball('DC'));
+        }, 1200);
+
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (e.code === 'Space') fire(player, isFlipped ? 1 : -1);
+            if (!gameActive) location.reload();
+        });
+        window.addEventListener('keyup', e => keys[e.code] = false);
+        window.addEventListener('mousemove', e => { if(gameActive) player.x = e.clientX - player.w/2; });
+        window.addEventListener('mousedown', () => { if(gameActive) fire(player, isFlipped ? 1 : -1); });
+        window.addEventListener('resize', init);
+        
+        init(); gameLoop();
+    </script>
+</body>
+</html>
