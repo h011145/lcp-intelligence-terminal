@@ -1,13 +1,10 @@
 # リナックス研究会 : 実績公開リポジトリ
 
-このリポジトリは、リナックス研究会（ドクターひろし提唱）による開発成果物を公開する場所です。
+このリポジトリは、ドクターひろし（リナックス研究会）が提唱する **「Linux 攻略法図鑑（成功の三原則）」** を公開する場所です。
 
-## 🚀 最新の成功作
-### Linux 攻略・開発スターターキット (Success Principles)
-APIキーや複雑な設定に依存せず、Linux本来の力を引き出すための「成功の三原則」を具現化したツールです。
+## 成功の三原則 [完全版]
+1. **Terminal Mastery**: GUIを捨て、コマンドという「直線道路」で環境を支配する。
+2. **Infrastructure Creation**: ディレクトリを構造化し、思考のノイズを消し去る。
+3. **Code Drawing**: エディタを開かず、catコマンドで考えを一瞬で「現実」へ描画する。
 
-1. **Terminal Mastery**: GUIを捨て、コマンドで意志を伝える。
-2. **Infrastructure Creation**: 瞬時に開発環境を自動構築。
-3. **Code Drawing**: エディタを開かず、思考をコードとして描画する。
-
-[詳細はこちら（GitHub Pages）](https://h011145.github.io/hirosi-web-test-02/achievements.html)
+[▶ 攻略法図鑑を見る（GitHub Pages）](https://h011145.github.io/hirosi-web-test-02/achievements.html)

@@ -3,29 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>実績 - リナックス研究会</title>
+    <title>実績：Linux 攻略法図鑑 - リナックス研究会</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Courier New', Courier, monospace; line-height: 1.8; }
+        .theory-card { border-top: 5px solid #212529; }
+        .principle-num { font-size: 1.2rem; font-weight: bold; color: #495057; }
+        .principle-title { font-size: 1.5rem; font-weight: bold; color: #212529; display: block; margin-bottom: 10px; }
+        .theory-content { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    </style>
 </head>
-<body class="bg-light font-monospace">
+<body>
     <div class="container py-5">
-        <h1 class="display-5 mb-4 border-bottom pb-2">主要実績・成果物</h1>
-        
-        <div class="card shadow-sm mb-4 border-primary">
-            <div class="card-body">
-                <h2 class="card-title text-primary h4">Linux 攻略・開発スターターキット (成功の三原則)</h2>
-                <p class="text-muted small">開発元: リナックス研究会 (ドクターひろし提唱)</p>
-                <hr>
-                <p>APIキー不要。メール送信不要。エディタ不要。Linuxの真髄を「支配」するための最小・最強のツールセット。</p>
-                <ul class="list-group list-group-flush mt-3">
-                    <li class="list-group-item bg-transparent"><strong class="text-primary">第1原則：ターミナルの制覇</strong><br>GUIの迷宮を脱出し、コマンドという「直線道路」で開発を進める。</li>
-                    <li class="list-group-item bg-transparent"><strong class="text-primary">第2原則：mkdir 世界創造</strong><br>環境構築を自動化し、整理された空間で完璧なアルゴリズムを構築する。</li>
-                    <li class="list-group-item bg-transparent"><strong class="text-primary">第3原則：cat コード描画術</strong><br>思考を中断させない。ボタン一つで考えをスクリプト（現実）に反映させる。</li>
-                </ul>
-            </div>
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold">Linux 攻略法図鑑</h1>
+            <p class="lead">成功の三原則 [完全版] / 提唱者：ドクターひろし</p>
         </div>
+        
+        <div class="theory-content mx-auto" style="max-width: 800px;">
+            <p class="mb-5 text-center text-muted border-bottom pb-3">
+                複雑な機能を捨て、最短距離で「開発の成功」へ至るための攻略理論。
+            </p>
 
-        <div class="mt-4">
-            <a href="index.html" class="btn btn-outline-secondary btn-sm">トップページに戻る</a>
+            <div class="mb-5">
+                <span class="principle-num">其の一</span>
+                <span class="principle-title">ターミナルの制覇 (GUIからの脱却)</span>
+                <p>GUIは「迷路」であり、初心者を惑わせる。ターミナルは「直線道路」だ。コマンドですべてが片付く。マウスを捨て、意志を文字（コマンド）で伝える。これこそが、開発を最速で成功させる唯一の極意である。</p>
+            </div>
+
+            <div class="mb-5">
+                <span class="principle-num">其の二</span>
+                <span class="principle-title">ディレクトリによる世界創造 (構造化)</span>
+                <p>開発の第一歩は「居場所」を作ることだ。必要なディレクトリをすべて作らせる。整理された空間こそが、思考のノイズを消し去る。ディレクトリ構造は、開発者の「意志の現れ」である。</p>
+            </div>
+
+            <div class="mb-5">
+                <span class="principle-num">其の三</span>
+                <span class="principle-title">cat コマンドによるコード描画術 (高速反映)</span>
+                <p>エディタ（nano/vi）を開くのは「思考の中断」である。catコマンドのヒアドキュメントを使い、一気にコードを描かせる。ボタン一つで、考えをファイルに直接描画する。エディタ操作を介さないことで、ミスを排除し速度を最大化する。</p>
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="index.html" class="btn btn-dark px-4">トップページに戻る</a>
+            </div>
         </div>
     </div>
 </body>
