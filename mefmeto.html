@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>メフメトの野望 - The Conquest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&display=swap');
+        :root { --osman-green: #06402b; --osman-gold: #d4af37; --osman-red: #8b0000; }
+        body { background: #000; color: #f0f0f0; font-family: 'Noto Serif JP', serif; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* UIステータス */
+        .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--osman-gold); padding: 5px; font-size: 11px; text-align: center; }
+        .status-item { background: #111; padding: 5px; }
+        .label { color: var(--osman-gold); font-size: 9px; display: block; }
+        
+        /* ログ */
+        #log { flex-grow: 1; background: #050505; padding: 15px; font-size: 13px; overflow-y: auto; color: #ccc; border-bottom: 1px solid #222; }
+        .log-entry { border-bottom: 1px solid #111; padding: 4px 0; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* 行動力 */
+        #ap-bar { background: #000; padding: 6px; text-align: center; font-size: 11px; border-bottom: 1px solid var(--osman-gold); }
+        .ap-dot { display: inline-block; width: 10px; height: 10px; background: var(--osman-gold); border-radius: 50%; margin: 0 4px; box-shadow: 0 0 5px var(--osman-gold); }
+        .ap-off { background: #333; box-shadow: none; }
+
+        /* ボタン */
+        .controls { background: var(--osman-green); padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn { background: #eee; color: #000; padding: 16px 0; border-radius: 4px; font-weight: bold; border: none; font-size: 14px; position: relative; }
+        .btn:disabled { opacity: 0.2; }
+        .btn-red { background: var(--osman-red); color: #fff; grid-column: span 2; border: 1px solid var(--osman-gold); }
+
+        #guard { position: fixed; inset: 0; z-index: 9999; display: none; }
+        
+        /* 結果表示・エンディング */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; flex-direction: column; }
+        .modal { background: #111; border: 2px solid var(--osman-gold); padding: 25px; border-radius: 8px; width: 100%; max-width: 320px; text-align: center; overflow-y: auto; max-height: 90vh; }
+        
+        .victory-title { color: var(--osman-gold); font-size: 24px; font-weight: bold; text-shadow: 0 0 15px var(--osman-gold); margin-bottom: 15px; }
+        .ending-text { text-align: left; font-size: 13px; line-height: 1.8; color: #ddd; margin: 15px 0; border-top: 1px solid #333; padding-top: 15px; }
+        .advice { background: #2a2000; border-left: 4px solid var(--osman-gold); padding: 12px; text-align: left; font-size: 12px; margin-top: 10px; color: #ffdf80; }
+
+        /* パーティクル演出用 */
+        .confetti { position: absolute; width: 5px; height: 5px; background: var(--osman-gold); animation: drop 3s infinite linear; z-index: 10001; }
+        @keyframes drop { to { transform: translateY(100vh) rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="guard"></div>
+
+    <div class="status-grid">
+        <div class="status-item"><span class="label">年月</span><span id="v-date">1451/01</span></div>
+        <div class="status-item"><span class="label">資金</span><span id="v-gold">500</span></div>
+        <div class="status-item"><span class="label">兵糧</span><span id="v-food">500</span></div>
+        <div class="status-item"><span class="label">兵力</span><span id="v-army">1000</span></div>
+        <div class="status-item"><span class="label">士気</span><span id="v-morale">50</span></div>
+        <div class="status-item"><span class="label">包囲網</span><span id="v-threat">0</span></div>
+    </div>
+
+    <div id="ap-bar">評定行動権: <span id="ap-dots"></span></div>
+
+    <div id="log"></div>
+
+    <div class="controls">
+        <button class="btn" id="b-commerce" onclick="game.cmd('commerce')">商業開発</button>
+        <button class="btn" id="b-cultivate" onclick="game.cmd('cultivate')">新田開発</button>
+        <button class="btn" id="b-recruit" onclick="game.cmd('recruit')">徴兵訓練</button>
+        <button class="btn" id="b-train" onclick="game.cmd('train')">軍備強化</button>
+        <button class="btn btn-red" id="b-war" onclick="game.cmd('war')">帝都決戦開始</button>
+    </div>
+
+    <!-- 結果モーダル -->
+    <div id="result-overlay" class="overlay">
+        <div class="modal">
+            <div id="r-title" class="victory-title"></div>
+            <p id="r-body" class="text-sm text-gray-300"></p>
+            
+            <div id="r-ending" class="ending-text" style="display:none;"></div>
+
+            <div id="r-report" class="bg-black p-3 my-3 text-xs text-left font-mono">
+                <div>我軍総力: <span id="r-atk" class="text-white"></span></div>
+                <div>帝都防御: <span id="r-def" class="text-white"></span></div>
+            </div>
+
+            <div id="r-advice" class="advice"></div>
+            <button class="btn w-full mt-4 bg-white text-black" onclick="location.reload()">再挑戦</button>
+        </div>
+    </div>
+
+    <script>
+    const game = {
+        s: { y: 1451, m: 1, gold: 500, food: 500, army: 1000, morale: 50, threat: 0, ap: 1, end: false },
+        
+        init() {
+            this.log("評定を開始せよ。帝都コンスタンティノープルを陥落させるのが貴殿の使命なり。");
+            this.draw();
+        },
+
+        draw() {
+            document.getElementById('v-date').innerText = `${this.s.y}/${String(this.s.m).padStart(2,'0')}`;
+            document.getElementById('v-gold').innerText = Math.floor(this.s.gold);
+            document.getElementById('v-food').innerText = Math.floor(this.s.food);
+            document.getElementById('v-army').innerText = Math.floor(this.s.army);
+            document.getElementById('v-morale').innerText = this.s.morale;
+            document.getElementById('v-threat').innerText = this.s.threat;
+            
+            const apDots = document.getElementById('ap-dots');
+            apDots.innerHTML = '';
+            for(let i=0; i<2; i++) {
+                const span = document.createElement('span');
+                span.className = i < this.s.ap ? 'ap-dot' : 'ap-dot ap-off';
+                apDots.appendChild(span);
+            }
+
+            const btns = ['b-commerce','b-cultivate','b-recruit','b-train','b-war'];
+            btns.forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = (this.s.ap <= 0 || this.s.end);
+                if(id === 'b-war' && this.s.army < 3000) el.disabled = true;
+            });
+        },
+
+        log(text, color = "#ccc") {
+            const logEl = document.getElementById('log');
+            const div = document.createElement('div');
+            div.className = "log-entry";
+            div.style.color = color;
+            div.innerText = `> ${text}`;
+            logEl.prepend(div);
+        },
+
+        cmd(type) {
+            if (this.s.end) return;
+            document.getElementById('guard').style.display = 'block';
+            requestAnimationFrame(() => this.execute(type));
+        },
+
+        execute(type) {
+            if (type === 'war') { this.finishWar(); return; }
+            
+            let ok = false;
+            if (type === 'commerce' && this.s.gold >= 50) { this.s.gold += 130; ok = true; this.log("市場を整備。歳入が増えた。"); }
+            if (type === 'cultivate' && this.s.gold >= 50) { this.s.gold -= 50; this.s.food += 350; ok = true; this.log("農地を拡大。食料を確保した。"); }
+            if (type === 'recruit' && this.s.gold >= 150) { this.s.gold -= 150; this.s.army += 1100; ok = true; this.log("徴兵を実施。軍勢が厚くなった。"); }
+            if (type === 'train') { this.s.morale = Math.min(100, this.s.morale + 30); ok = true; this.log("兵を訓練。士気が向上した。"); }
+
+            if (ok) {
+                this.s.ap--;
+                this.draw();
+                if (this.s.ap <= 0) {
+                    setTimeout(() => this.npcTurn(), 300);
+                } else {
+                    this.log("【連撃】まだ命令を下せる！", "cyan");
+                    document.getElementById('guard').style.display = 'none';
+                }
+            } else {
+                this.log("資金が足りぬ。", "red");
+                document.getElementById('guard').style.display = 'none';
+            }
+        },
+
+        npcTurn() {
+            this.log("近隣諸国：東ローマを支援。防御が向上。"); this.s.threat += 3;
+            this.log("教皇庁：十字軍の招集を急いでいる。"); this.s.threat += 7;
+            setTimeout(() => this.nextMonth(), 300);
+        },
+
+        nextMonth() {
+            this.s.m++;
+            if(this.s.m > 12) { this.s.m = 1; this.s.y++; this.s.gold += 150; }
+            this.s.food -= Math.floor(this.s.army / 30);
+
+            if (this.s.y >= 1460) return this.over("歴史の闇へ", "1460年。あなたの野望は潰えた。", "timeout");
+            if (this.s.food < 0) return this.over("餓死の帝国", "兵糧が尽き、全軍が離反した。", "famine");
+            if (this.s.threat >= 100) return this.over("逆包囲網", "十字軍によりエディルネが陥落。", "siege");
+
+            this.s.ap = Math.random() < 0.2 ? 2 : 1;
+            this.log(`${this.s.y}年${this.s.m}月。評定を開く。`);
+            this.draw();
+            document.getElementById('guard').style.display = 'none';
+        },
+
+        finishWar() {
+            this.s.end = true;
+            this.log("「アラー・アクバル！」全軍、城壁へ突撃せよ！！", "red");
+            setTimeout(() => {
+                const def = 5500 + (this.s.threat * 45);
+                const atk = this.s.army * (this.s.morale / 45);
+                
+                document.getElementById('r-atk').innerText = Math.floor(atk);
+                document.getElementById('r-def').innerText = Math.floor(def);
+
+                if (atk > def) {
+                    this.startConfetti();
+                    this.over("聖なる勝利", "1453年5月29日。帝都陥落。", "win");
+                } else {
+                    this.over("攻略失敗", "テオドシウスの壁は落ちず、軍は壊滅した。", "defeat");
+                }
+            }, 1000);
+        },
+
+        startConfetti() {
+            for(let i=0; i<50; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.animationDelay = Math.random() * 3 + 's';
+                c.style.backgroundColor = Math.random() > 0.5 ? '#d4af37' : '#06402b';
+                document.body.appendChild(c);
+            }
+        },
+
+        over(title, body, reason) {
+            this.s.end = true;
+            const t = document.getElementById('r-title');
+            const b = document.getElementById('r-body');
+            const end = document.getElementById('r-ending');
+            const adv = document.getElementById('r-advice');
+            
+            t.innerText = title;
+            b.innerText = body;
+
+            if (reason === "win") {
+                t.style.color = "var(--osman-gold)";
+                end.style.display = "block";
+                end.innerHTML = `<b>【後日談】</b><br>メフメト2世はコンスタンティノープルを「イスタンブル」と改称。東ローマの遺産を受け継ぎ、オスマン帝国を世界帝国へと押し上げた。彼はこれ以降「征服王（ファーティフ）」と称えられることになる。`;
+                adv.innerText = "【称号】世界を制する征服王\n見事な采配でした。あなたは歴史を変えました！";
+                document.getElementById('r-report').style.display = "none";
+            } else {
+                t.style.color = "var(--osman-red)";
+                let hint = "";
+                if (reason === "timeout") hint = "内政より軍備を急げ。1453年が歴史の分水嶺だ。";
+                if (reason === "famine") hint = "徴兵の前に『新田開発』を。胃袋が戦を支える。";
+                if (reason === "siege") hint = "包囲網が育つ前に決戦を挑め。時間は敵だ。";
+                if (reason === "defeat") hint = "兵力が足りぬ。士気100でも5000人は必要だ。";
+                adv.innerText = "【軍師の遺言】\n" + hint;
+            }
+            
+            document.getElementById('result-overlay').style.display = 'flex';
+            this.draw();
+        }
+    };
+
+    window.onload = () => game.init();
+    </script>
+</body>
+</html>
