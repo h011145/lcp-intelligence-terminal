@@ -115,11 +115,11 @@
         }
 
         window.onload = () => {
-            typeWriter(titleText, "typing-title", 100, () => {
+            typeWriter(titleText, "typing-title", 50, () => {
                 const cursor = document.createElement('span');
                 cursor.className = 'cursor';
                 document.getElementById('typing-title').appendChild(cursor);
-                typeWriter(subText, "typing-sub", 30);
+                typeWriter(subText, "typing-sub", 15);
             });
         };
     </script>
