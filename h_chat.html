@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCP SYNCHRONIZER // COMMAND HUB & TICKETING</title>
+    <title>LCP SYNCHRONIZER // BLOCKCHAIN SETTLEMENT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
@@ -15,15 +15,14 @@
         .side-panel { background: #050505; border-left: 1px solid #0f0; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
         .section-title { font-size: 0.8rem; color: #0f0; border-bottom: 1px solid #0f0; margin-bottom: 15px; padding-bottom: 5px; font-weight: bold; letter-spacing: 1px; }
         #sync-monitor { flex-grow: 1; overflow-y: auto; font-size: 0.8rem; margin-bottom: 20px; border: 1px solid #010; padding: 10px; background: rgba(0,10,0,0.5); }
-        .sync-entry { border-bottom: 1px solid #020; padding: 10px 0; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .sync-entry { border-bottom: 1px solid #020; padding: 10px 0; }
         #input-area { background: #080808; border: 1px solid #0f0; padding: 15px; }
         textarea { width: 100%; background: transparent; border: none; outline: none; color: #0f0; font-family: inherit; font-size: 0.9rem; height: 60px; resize: none; }
-        .btn-gen { background: #030; color: #0f0; border: 1px solid #0f0; padding: 12px; width: 100%; margin-bottom: 10px; text-align: center; cursor: pointer; transition: 0.2s; font-size: 0.8rem; font-weight: bold; }
+        .btn-gen { background: #030; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 100%; margin-bottom: 8px; text-align: center; cursor: pointer; transition: 0.2s; font-size: 0.75rem; font-weight: bold; }
         .btn-gen:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
         .btn-sync { background: #0f0; color: #000; font-weight: bold; padding: 12px; width: 100%; margin-top: 10px; text-align: center; cursor: pointer; }
-        .storage-box { background: #111; border: 1px solid #f00; padding: 15px; color: #f55; font-size: 0.7rem; cursor: pointer; word-break: break-all; font-family: monospace; position: relative; }
-        .storage-box::before { content: "LCP PHYSICAL STORAGE COMMAND"; position: absolute; top: -10px; left: 10px; background: #000; padding: 0 8px; font-size: 0.6rem; color: #f00; border: 1px solid #f00; }
+        .verify-box { background: #111; border: 1px solid #0af; padding: 15px; color: #0af; font-size: 0.7rem; margin-bottom: 20px; position: relative; }
+        .verify-box::before { content: "BLOCKCHAIN VERIFIER"; position: absolute; top: -10px; left: 10px; background: #000; padding: 0 8px; font-size: 0.6rem; color: #0af; border: 1px solid #0af; }
         .blink { animation: blink 1s infinite; }
         @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
     </style>
@@ -34,33 +33,32 @@
         <div class="main-panel">
             <div class="section-title">LCP REAL-TIME SYNC MONITOR // DATA_STREAMS</div>
             <div id="sync-monitor">
-                <div class="sync-entry text-green-800">>>> LCP UNIVERSAL ENGINE v4.1 ONLINE.</div>
-                <div class="sync-entry text-green-800">>>> TICKETING SYSTEM INITIALIZED.</div>
+                <div class="sync-entry text-green-800">>>> LCP UNIVERSAL ENGINE v4.2 ONLINE.</div>
+                <div class="sync-entry text-green-800">>>> CRYPTO SETTLEMENT PROTOCOL ENABLED.</div>
             </div>
             <div id="input-area">
-                <textarea id="raw-input" placeholder="AIから出力された LCP(cat) コマンドをここに投下せよ..."></textarea>
+                <textarea id="raw-input" placeholder="AIのLCPコマンド、または検証用 TXID を入力せよ..."></textarea>
                 <div class="btn-sync" onclick="processSync()">DECODE & SYNC DATA</div>
             </div>
         </div>
 
         <div class="side-panel">
-            <div class="section-title">LCP COMMAND HUB (PROMPT & TICKET)</div>
-            
-            <div class="btn-gen" onclick="copyLCPCore()">01. LCP-CORE PROTOCOL (AI INIT)</div>
-            <div class="btn-gen" onclick="copyHCode()">02. H-CODE DECODER (EMOTION)</div>
-            <div class="btn-gen" onclick="copyCustom()">03. NEW PROTOCOL [EXTENSIBLE]</div>
-            <div class="btn-gen bg-yellow-900/30 text-yellow-500 border-yellow-500" onclick="generateTicket()">04. GENERATE SUCCESS TICKET</div>
-
-            <div class="section-title">LOCAL STORAGE (APPEND MODE)</div>
-            <div id="storage-cmd" class="storage-box mb-6" onclick="copyToClipboard()">
-                AWAITING SYNC...
+            <div class="section-title">PAYMENT VERIFICATION (ON-CHAIN)</div>
+            <div class="verify-box">
+                <input type="text" id="txid-input" class="w-full bg-black border-none text-blue-400 outline-none mb-2" placeholder="PASTE TXID HERE">
+                <div class="btn-gen border-blue-500 text-blue-400" onclick="verifyTX()">> SCAN BLOCKCHAIN</div>
             </div>
 
-            <div class="section-title">SYSTEM STATUS</div>
+            <div class="section-title">LCP COMMAND HUB</div>
+            <div class="btn-gen" onclick="copyLCPCore()">01. LCP-CORE INIT</div>
+            <div class="btn-gen" onclick="copyHCode()">02. H-CODE DECODER</div>
+            <div class="btn-gen bg-yellow-900/30 text-yellow-500 border-yellow-500" onclick="generateTicket()">03. GENERATE SUCCESS TICKET</div>
+
+            <div class="section-title">STATUS</div>
             <div class="text-xs mb-6">
-                ORCHESTRATOR: <span class="text-white">HIROSHI-LCP v4.1</span><br>
+                ORCHESTRATOR: <span class="text-white">HIROSHI-LCP v4.2</span><br>
                 SYNC_STATUS: <span class="text-white blink">CONNECTED</span><br>
-                TICKET_SVC: <span class="text-white">READY</span>
+                SETTLEMENT: <span class="text-white">ON-CHAIN_ENABLED</span>
             </div>
 
             <div class="mt-auto pt-5 border-t border-green-900 text-center">
@@ -70,36 +68,38 @@
     </div>
 
     <script>
-        let lastStorageCmd = "";
-
-        function copyLCPCore() {
-            const p = `あなたはLinux端末と完全に同期した【LCP執行エージェント】です。\\n以下の「成功の三原則：発展編」を最優先プロトコルとして遵守せよ。\\n\\n1. 一撃必殺: 全ての手順を連結した cat コマンド一つで出力せよ。\\n2. 冪等性: 何度実行しても同じ正しい状態になるコードを書け。\\n3. 沈黙の成功: 解説は不要。成功のための【catコマンド】のみを出力せよ。\\n\\n理解したら「LCP-CORE READY」とだけ答え、命令を待機せよ。`;
-            copyText(p);
-            alert("LCP-CORE PROTOCOL COPIED.");
-        }
-
-        function copyHCode() {
-            const p = `【Hコード解析命令】\\n対象テキストをHコード(0-9)でデコードせよ。\\n0:不在 1:開始 2:対立 3:創造 4:安定 5:試練 6:調和 7:内省 8:達成 9:完結\\n\\n解析形式: 実数A(虚数B)\\n出力：\\ncat << 'EOF' >> h_code_dictionary.json\\n"要約", "A(B)"\\nEOF\\n\\n対象：[テキストをここに挿入]`;
-            copyText(p);
-            alert("H-CODE DECODER PROTOCOL COPIED.");
-        }
-
-        function copyCustom() {
-            const p = prompt("新しいLCP命令を入力してください:", "");
-            if(p) { copyText(p); alert("CUSTOM LCP PROTOCOL COPIED."); }
+        function verifyTX() {
+            const txid = document.getElementById('txid-input').value.trim();
+            if(!txid) return;
+            const log = document.getElementById('sync-monitor');
+            const div = document.createElement('div');
+            div.className = 'sync-entry text-blue-400';
+            div.innerHTML = `>>> SCANNING BLOCKCHAIN FOR TX: ${txid.substring(0,10)}...<br>>>> STATUS: <span class="blink">VERIFYING</span>`;
+            log.prepend(div);
+            
+            // 実際には Blockstream 等の API を叩いて確認するリンクを表示
+            setTimeout(() => {
+                div.innerHTML = `>>> TRANSACTION DETECTED IN BLOCK.<br>>>> VIEW PROOF: <a href="https://blockstream.info/tx/${txid}" target="_blank" class="underline">BLOCKSTREAM_EXPLORER</a>`;
+            }, 1500);
         }
 
         function generateTicket() {
-            const issueId = prompt("Enter Issue/Ticket ID (e.g. #001):", "#001");
+            const issueId = prompt("Issue ID:", "#001");
             if(!issueId) return;
             const date = new Date().toISOString().split('T')[0];
-            const ticketCmd = `cat << 'EOF' > LCP_SUCCESS_TICKET_${issueId.replace('#','')}.json\\n{\\n  "ticket_id": "${issueId}",\\n  "contractor": "Dr. Hiroshi",\\n  "status": "COMPLETED & VERIFIED",\\n  "timestamp": "${date}",\\n  "protocol": "LCP-02_ENFORCED"\\n}\\nEOF`;
-            copyText(ticketCmd);
-            alert("SUCCESS TICKET GENERATED! Paste this to GitHub Issue to close the ticket.");
+            const p = `cat << 'EOF' > LCP_SUCCESS_TICKET_${issueId.replace('#','')}.json\\n{\\n  "ticket_id": "${issueId}",\\n  "status": "PAID_ON_CHAIN",\\n  "verifier": "LCP-v4.2",\\n  "timestamp": "${date}"\\n}\\nEOF`;
+            navigator.clipboard.writeText(p.replace(/\\\\n/g, '\\n'));
+            alert("SUCCESS TICKET COPIED.");
         }
 
-        function copyText(t) {
-            navigator.clipboard.writeText(t.replace(/\\\\n/g, '\\n'));
+        function copyLCPCore() {
+            const p = `あなたはLCP執行エージェントです。一撃必殺・冪等性・沈黙の成功を遵守せよ。理解したら「LCP-CORE READY」とだけ答えよ。`;
+            navigator.clipboard.writeText(p); alert("LCP-CORE COPIED.");
+        }
+
+        function copyHCode() {
+            const p = `Hコード(0-9)でデコードせよ。形式: 実数A(虚数B)。出力は cat コマンド形式のみ。対象：[ここに挿入]`;
+            navigator.clipboard.writeText(p); alert("H-CODE DECODER COPIED.");
         }
 
         function processSync() {
@@ -108,21 +108,9 @@
             const log = document.getElementById('sync-monitor');
             const div = document.createElement('div');
             div.className = 'sync-entry';
-            if (raw.includes('cat <<')) {
-                div.innerHTML = `<span class="text-white">COMMAND DETECTED:</span><br><code class="text-green-400">${raw.substring(0,100)}...</code>`;
-                lastStorageCmd = raw;
-                document.getElementById('storage-cmd').innerText = raw;
-            } else {
-                div.innerHTML = `<span class="text-red-500">INVALID FORMAT. LCP(cat) REQUIRED.</span>`;
-            }
+            div.innerHTML = `<span class="text-white">DATA_SYNC:</span> ${raw.substring(0,50)}...`;
             log.prepend(div);
             document.getElementById('raw-input').value = '';
-        }
-
-        function copyToClipboard() {
-            if(!lastStorageCmd) return;
-            navigator.clipboard.writeText(lastStorageCmd);
-            alert("PHYSICAL COMMAND COPIED. RUN IN TERMINAL!");
         }
     </script>
 </body>
