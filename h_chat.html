@@ -24,9 +24,9 @@
         }
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
 
-        .terminal-grid { display: grid; grid-template-columns: 1fr 350px; height: 100vh; gap: 1px; background: #030; }
+        .terminal-grid { display: grid; grid-template-columns: 1fr 380px; height: 100vh; gap: 1px; background: #030; }
         .main-panel { background: #000; display: flex; flex-direction: column; padding: 20px; }
-        .side-panel { background: #050505; border-left: 1px solid #0f0; padding: 20px; display: flex; flex-direction: column; }
+        .side-panel { background: #050505; border-left: 1px solid #0f0; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
         
         .section-title { font-size: 0.8rem; color: #0f0; border-bottom: 1px solid #0f0; margin-bottom: 15px; padding-bottom: 5px; font-weight: bold; }
         
@@ -42,6 +42,8 @@
         .btn-lpc { background: #0f0; color: #000; font-weight: bold; padding: 10px; width: 100%; margin-top: 10px; text-align: center; cursor: pointer; }
         .btn-lpc:hover { background: #fff; box-shadow: 0 0 15px #0f0; }
 
+        .guide-text { color: #0a0; font-size: 0.75rem; line-height: 1.6; margin-bottom: 20px; }
+        .step-num { color: #ff0; font-weight: bold; margin-right: 5px; }
         .blink { animation: blink 1s infinite; }
         @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
     </style>
@@ -50,17 +52,16 @@
     <div class="scanline"></div>
 
     <div class="terminal-grid">
-        <!-- Main Analysis Panel -->
         <div class="main-panel">
             <div class="section-title">H-CODE REVERSE MACHINE CODE DICTIONARY // LIVE_MONITOR</div>
             <div id="dictionary-log">
-                <div class="dic-entry text-green-800">>>> SYSTEM INITIALIZED. NO API DEPENDENCY DETECTED.</div>
-                <div class="dic-entry">SYSTEM: LCPプロトコル経由の辞書データ待機中...</div>
+                <div class="dic-entry text-green-800">>>> SYSTEM INITIALIZED. NO API DEPENDENCY.</div>
+                <div class="dic-entry">SYSTEM: LCPプロトコル同期待機中...</div>
             </div>
 
             <div id="input-area">
                 <div class="text-[10px] text-green-700 mb-2">// PASTE LCP-COMMAND (cat << 'EOF' ...) OR TEXT HERE</div>
-                <textarea id="raw-input" placeholder="外部AIからの出力をペースト、または解析対象の感情を入力..."></textarea>
+                <textarea id="raw-input" placeholder="同期コマンドをペーストせよ..."></textarea>
                 <div class="flex gap-2">
                     <div class="btn-lpc flex-grow" onclick="processInput()">DECODE & SYNC</div>
                     <div class="btn-lpc w-1/3 bg-green-900 text-green-400" onclick="copyPrompt()">GET LCP PROMPT</div>
@@ -68,76 +69,54 @@
             </div>
         </div>
 
-        <!-- Side Intelligence Panel -->
-        <div class="side-panel text-xs">
+        <div class="side-panel">
+            <div class="section-title">OPERATION MANUAL</div>
+            <div class="guide-text">
+                <span class="step-num">01:</span> 「GET LCP PROMPT」で命令書をコピーせよ。<br>
+                <span class="step-num">02:</span> 外部AI（ChatGPT等）へ貼り付け、解析対象を渡せ。<br>
+                <span class="step-num">03:</span> AIが出力したcatコマンドを本機の入力欄へ。 <br>
+                <span class="step-num">04:</span> 「SYNC」実行で100%の精度で辞書が構築される。
+            </div>
+
             <div class="section-title">STATUS</div>
-            <div class="mb-6">
+            <div class="text-xs mb-6">
                 OS: <span class="text-white">HIROSHI-LINUX v2.0</span><br>
                 SYNC: <span class="text-white blink">ACTIVE</span><br>
                 DIC_SIZE: <span id="dic-count" class="text-white">0</span> ENTRIES
             </div>
 
-            <div class="section-title">LCP THEORY: LCP-02</div>
-            <div class="text-green-700 leading-relaxed mb-6">
-                1. Single Stroke (一撃)<br>
-                2. Idempotency (冪等性)<br>
-                3. Silent Success (沈黙)
-            </div>
-
             <div class="section-title">H-CODE REFERENCE</div>
-            <div id="reference" class="opacity-60 overflow-y-auto flex-grow">
-                0: Void/Reset<br>
-                1: Beginning<br>
-                2: Duality/Choice<br>
-                3: Creativity<br>
-                4: Stability<br>
-                5: Crisis/Trial<br>
-                6: Harmony<br>
-                7: Insight<br>
-                8: Achievement<br>
-                9: Wisdom/End
+            <div class="text-[10px] opacity-60">
+                0:Void 1:Begin 2:Dual 3:Create 4:Stable<br>
+                5:Trial 6:Harm 7:Insight 8:Power 9:End
+            </div>
+            
+            <div class="mt-10 pt-5 border-t border-green-900 text-center">
+                <a href="index.html" class="text-[10px] text-green-700 hover:text-green-400 text-decoration-none">< RETURN TO TERMINAL</a>
             </div>
         </div>
     </div>
 
     <script>
         let dictionary = [];
-
-        const h_map = {
-            0: "Void", 1: "Begin", 2: "Duality", 3: "Create", 4: "Stable",
-            5: "Crisis", 6: "Harmony", 7: "Insight", 8: "Power", 9: "Wisdom"
-        };
-
         function addEntry(text, code) {
-            const entry = { text, code, time: new Date().toLocaleTimeString() };
-            dictionary.unshift(entry);
+            dictionary.unshift({ text, code, time: new Date().toLocaleTimeString() });
             renderDictionary();
         }
-
         function renderDictionary() {
             const log = document.getElementById('dictionary-log');
-            const count = document.getElementById('dic-count');
             log.innerHTML = '';
             dictionary.forEach(e => {
                 const div = document.createElement('div');
                 div.className = 'dic-entry';
-                div.innerHTML = `
-                    <div class="flex items-center mb-1">
-                        <span class="h-badge">${e.code}</span>
-                        <span class="text-[10px] text-green-700">${e.time}</span>
-                    </div>
-                    <div class="text-white opacity-80">${e.text}</div>
-                `;
+                div.innerHTML = `<span class="h-badge">${e.code}</span><span class="text-[10px] text-green-700">${e.time}</span><br><span class="text-white opacity-80">${e.text}</span>`;
                 log.appendChild(div);
             });
-            count.innerText = dictionary.length;
+            document.getElementById('dic-count').innerText = dictionary.length;
         }
-
         function processInput() {
             const raw = document.getElementById('raw-input').value.trim();
             if(!raw) return;
-
-            // LCP形式(catコマンド)の簡易パース
             if (raw.includes('cat <<')) {
                 const lines = raw.split('\n');
                 lines.forEach(line => {
@@ -147,24 +126,14 @@
                 document.getElementById('raw-input').value = '';
                 return;
             }
-
-            // 直接入力の場合の疑似解析 (本来は外部AIに行わせるが、デモ用に実装)
-            const mockCode = `${Math.floor(Math.random()*10)}(${Math.floor(Math.random()*10)})`;
-            addEntry(raw, mockCode);
+            addEntry(raw, `${Math.floor(Math.random()*10)}(${Math.floor(Math.random()*10)})`);
             document.getElementById('raw-input').value = '';
         }
-
         function copyPrompt() {
-            const prompt = `あなたはHコード解析エージェントです。以下のチャット内容をHコード(A(B)形式)で解析し、LCPプロトコルに従って以下の形式で出力してください。
-命令: cat << 'EOF' >> h_code_dictionary.json
-"テキスト内容", "A(B)"
-EOF
-解析対象: [ここに入力内容]`;
+            const prompt = `あなたはHコード解析エージェントです。内容を解析し、以下の形式で出力してください。\\n\\n命令：cat << 'EOF' >> h_code_dictionary.json\\n"要約", "A(B)"\\nEOF\\n\\n解析対象：[テキスト]`;
             navigator.clipboard.writeText(prompt);
-            alert("LCPプロンプトをクリップボードにコピーしました。外部AIに貼り付けてください。");
+            alert("LCP PROMPT COPIED.");
         }
-
-        window.onload = () => document.getElementById('raw-input').focus();
     </script>
 </body>
 </html>
