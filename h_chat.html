@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>H-CODE INTELLIGENCE TERMINAL // LPC-LINKED</title>
+    <title>H-CODE SYNC TERMINAL v3.1 // APPEND_MODE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
         body { background-color: #000; color: #0f0; font-family: 'Fira Code', monospace; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
         .scanline { width: 100%; height: 100px; z-index: 99; pointer-events: none; background: linear-gradient(0deg, rgba(0, 255, 0, 0) 0%, rgba(0, 255, 0, 0.05) 50%, rgba(0, 255, 0, 0) 100%); opacity: 0.1; position: fixed; bottom: 100%; animation: scanline 8s linear infinite; }
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
-        .terminal-grid { display: grid; grid-template-columns: 1fr 380px; height: 100vh; gap: 1px; background: #030; }
+        .terminal-grid { display: grid; grid-template-columns: 1fr 420px; height: 100vh; gap: 1px; background: #030; }
         .main-panel { background: #000; display: flex; flex-direction: column; padding: 20px; }
         .side-panel { background: #050505; border-left: 1px solid #0f0; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
         .section-title { font-size: 0.8rem; color: #0f0; border-bottom: 1px solid #0f0; margin-bottom: 15px; padding-bottom: 5px; font-weight: bold; }
         #dictionary-log { flex-grow: 1; overflow-y: auto; font-size: 0.8rem; margin-bottom: 20px; }
-        .dic-entry { border-bottom: 1px solid #020; padding: 10px 0; animation: slideIn 0.3s; }
-        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .dic-entry { border-bottom: 1px solid #020; padding: 10px 0; }
         .h-badge { background: #0f0; color: #000; font-weight: bold; padding: 1px 6px; border-radius: 2px; margin-right: 8px; }
         #input-area { background: #080808; border: 1px solid #0f0; padding: 15px; }
-        textarea { width: 100%; background: transparent; border: none; outline: none; color: #0f0; font-family: inherit; font-size: 0.9rem; height: 80px; resize: none; }
-        .btn-lpc { background: #0f0; color: #000; font-weight: bold; padding: 10px; width: 100%; margin-top: 10px; text-align: center; cursor: pointer; }
+        textarea { width: 100%; background: transparent; border: none; outline: none; color: #0f0; font-family: inherit; font-size: 0.9rem; height: 60px; resize: none; }
+        .btn-lpc { background: #0f0; color: #000; font-weight: bold; padding: 10px; width: 100%; margin-top: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
         .btn-lpc:hover { background: #fff; box-shadow: 0 0 15px #0f0; }
-        .guide-text { color: #0a0; font-size: 0.75rem; line-height: 1.6; margin-bottom: 20px; }
-        .step-num { color: #ff0; font-weight: bold; margin-right: 5px; }
+        .storage-command-box { background: #111; border: 1px solid #f00; padding: 15px; color: #f55; font-size: 0.75rem; cursor: pointer; word-break: break-all; position: relative; font-family: monospace; }
+        .storage-command-box::before { content: "APPEND TO DICTIONARY (LCP-02)"; position: absolute; top: -10px; left: 10px; background: #000; padding: 0 8px; font-size: 0.65rem; color: #f00; border: 1px solid #f00; }
+        .storage-command-box:hover { background: #200; color: #fff; }
         .blink { animation: blink 1s infinite; }
         @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
     </style>
@@ -32,40 +32,52 @@
     <div class="scanline"></div>
     <div class="terminal-grid">
         <div class="main-panel">
-            <div class="section-title">H-CODE REVERSE MACHINE CODE DICTIONARY // LIVE_MONITOR</div>
+            <div class="section-title">H-CODE INTELLIGENCE MONITOR // DATA_IN</div>
             <div id="dictionary-log">
-                <div class="dic-entry text-green-800">>>> SYSTEM INITIALIZED. LCP-02 ENFORCED.</div>
-                <div class="dic-entry">SYSTEM: LCP同期待機中...</div>
+                <div class="dic-entry text-green-800">>>> APPEND MODE ACTIVE. READY TO EXPAND THE COLLECTIVE CONSCIOUSNESS.</div>
             </div>
             <div id="input-area">
-                <div class="text-[10px] text-green-700 mb-2">// PASTE LCP-COMMAND (cat << 'EOF' ...) HERE</div>
-                <textarea id="raw-input" placeholder="外部AIの出力をここにペーストせよ..."></textarea>
+                <textarea id="raw-input" placeholder="外部AIからの出力をペースト、または文章を入力せよ..."></textarea>
                 <div class="flex gap-2">
-                    <div class="btn-lpc flex-grow" onclick="processInput()">DECODE & SYNC</div>
+                    <div class="btn-lpc flex-grow" onclick="processInput()">DECODE & APPEND</div>
                     <div class="btn-lpc w-1/3 bg-green-900 text-green-400" onclick="copyPrompt()">GET PROMPT</div>
                 </div>
             </div>
         </div>
         <div class="side-panel">
+            <div class="section-title">STORAGE ENGINE [APPEND]</div>
+            <div id="storage-cmd" class="storage-command-box mb-6" onclick="copyToTerminal()">
+                PENDING DATA...
+            </div>
             <div class="section-title">OPERATION MANUAL</div>
-            <div class="guide-text">
-                <span class="step-num">01:</span> 「GET PROMPT」でHコード定義済みの命令書をコピーせよ。<br>
-                <span class="step-num">02:</span> 外部AIへ貼り付け、解析対象を渡せ。<br>
-                <span class="step-num">03:</span> AIが出力したcatコマンドを本機の入力欄へ。 <br>
-                <span class="step-num">04:</span> 「SYNC」実行。100%のシンクロが完了する。
+            <div class="text-[10.5px] text-green-700 leading-relaxed mb-6">
+                1. 「GET PROMPT」で外部AIへ命令せよ。<br>
+                2. AIの出力をペーストし「DECODE」せよ。<br>
+                3. 上の「STORAGE ENGINE」をクリックしてコピーせよ。<br>
+                4. **ターミナル**へ貼り付け。辞書に無限に追記される。
             </div>
             <div class="section-title">STATUS</div>
-            <div class="text-xs mb-6">OS: HIROSHI-LINUX v2.0<br>SYNC: <span class="text-white blink">ACTIVE</span><br>DIC_SIZE: <span id="dic-count" class="text-white">0</span> ENTRIES</div>
-            <div class="section-title">H-CODE REFERENCE</div>
-            <div class="text-[10px] opacity-60">0:Void 1:Begin 2:Dual 3:Create 4:Stable<br>5:Trial 6:Harm 7:Insight 8:Power 9:End</div>
-            <div class="mt-10 pt-5 border-t border-green-900 text-center"><a href="index.html" class="text-[10px] text-green-700 hover:text-green-400 text-decoration-none">< RETURN TO TERMINAL</a></div>
+            <div class="text-xs">OS: HIROSHI-LINUX v3.1<br>SYNC: <span class="text-white blink">ACTIVE</span><br>DIC_SIZE: <span id="dic-count" class="text-white">0</span> ENTRIES</div>
+            <div class="mt-auto pt-5 border-t border-green-900 text-center"><a href="index.html" class="text-[10px] text-green-700 hover:text-green-400 text-decoration-none">< RETURN TO TERMINAL</a></div>
         </div>
     </div>
     <script>
         let dictionary = [];
+        let lastCmd = "";
         function addEntry(text, code) {
             dictionary.unshift({ text, code, time: new Date().toLocaleTimeString() });
+            updateStorageCommand(text, code);
             renderDictionary();
+        }
+        function updateStorageCommand(text, code) {
+            // ">>" を使用して、上書きではなく「追記」を強制する
+            lastCmd = `cat << 'EOF' >> h_code_dictionary.json\n"${text}", "${code}"\nEOF`;
+            document.getElementById('storage-cmd').innerText = lastCmd;
+        }
+        function copyToTerminal() {
+            if(!lastCmd) return;
+            navigator.clipboard.writeText(lastCmd);
+            alert("COMMAND COPIED. Run this in terminal to APPEND data.");
         }
         function renderDictionary() {
             const log = document.getElementById('dictionary-log');
@@ -73,7 +85,7 @@
             dictionary.forEach(e => {
                 const div = document.createElement('div');
                 div.className = 'dic-entry';
-                div.innerHTML = `<span class="h-badge">${e.code}</span><span class="text-[10px] text-green-700">${e.time}</span><br><span class="text-white opacity-80">${e.text}</span>`;
+                div.innerHTML = `<span class="h-badge">${e.code}</span><span class="text-white">${e.text}</span>`;
                 log.appendChild(div);
             });
             document.getElementById('dic-count').innerText = dictionary.length;
@@ -83,20 +95,20 @@
             if(!raw) return;
             if (raw.includes('cat <<')) {
                 const lines = raw.split('\n');
-                let found = false;
                 lines.forEach(line => {
                     const match = line.match(/"([^"]+)",\s*"(\d\(\d\))"/);
-                    if (match) { addEntry(match[1], match[2]); found = true; }
+                    if (match) addEntry(match[1], match[2]);
                 });
-                if(found) { document.getElementById('raw-input').value = ''; return; }
+                document.getElementById('raw-input').value = '';
+                return;
             }
             addEntry(raw, `${Math.floor(Math.random()*10)}(${Math.floor(Math.random()*10)})`);
             document.getElementById('raw-input').value = '';
         }
         function copyPrompt() {
-            const prompt = `あなたはドクターひろし直属の【Hコード解析官】です。\\n以下のルールに従い、対象テキストを【逆マシン語（Hコード）】へデコードせよ。\\n\\n■Hコード定義（0-9黄金パターン）:\\n0:Absence(不在) 1:Beginning(開始) 2:Duality(対立) 3:Creativity(創造) 4:Stability(安定) 5:Trial(試練) 6:Harmony(調和) 7:Insight(内省) 8:Achievement(達成) 9:Wisdom(完結)\\n\\n■解析形式:\\n実数A(虚数B) の形式で出力。Aは表面的状態、Bは精神的意図。\\n\\n■LCPプロトコルによる出力強制:\\n余計な解説は一切不要。以下の【catコマンド】のみを一撃で出力せよ。\\n\\n命令：\\ncat << 'EOF' >> h_code_dictionary.json\\n"解析対象の要約", "A(B)"\\nEOF\\n\\n解析対象：\\n[ここにテキストを挿入]`;
-            navigator.clipboard.writeText(prompt.replace(/\\\\n/g, '\\n'));
-            alert("H-CODE RULES & LCP PROMPT COPIED.");
+            const p = `あなたはドクターひろし直属の【Hコード解析官】です。\\n以下のルールに従い、対象テキストを【逆マシン語（Hコード）】へデコードせよ。\\n\\n■Hコード定義（0-9黄金パターン）:\\n0:Absence 1:Beginning 2:Duality 3:Creativity 4:Stability 5:Trial 6:Harmony 7:Insight 8:Achievement 9:Wisdom\\n\\n■解析形式: 実数A(虚数B)\\n\\n■LCPプロトコルによる出力強制:\\n余計な解説は一切不要。以下の【catコマンド】のみを一撃で出力せよ。\\n\\n命令：\\ncat << 'EOF' >> h_code_dictionary.json\\n"要約", "A(B)"\\nEOF\\n\\n解析対象：\\n[ここにテキストを挿入]`;
+            navigator.clipboard.writeText(p.replace(/\\\\n/g, '\\n'));
+            alert("LCP APPEND PROMPT COPIED.");
         }
     </script>
 </body>
