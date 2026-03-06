@@ -1,60 +1,13 @@
-# PyMuPDF
+# リナックス研究会 : 実績公開リポジトリ
 
-**PyMuPDF** is a high performance **Python** library for data extraction, analysis, conversion & manipulation of [PDF (and other) documents](https://pymupdf.readthedocs.io/en/latest/the-basics.html#supported-file-types).
+このリポジトリは、リナックス研究会（ドクターひろし提唱）による開発成果物を公開する場所です。
 
-# Community
-Join us on **Discord** here: [#pymupdf](https://discord.gg/TSpYGBW4eq)
+## 🚀 最新の成功作
+### Linux 攻略・開発スターターキット (Success Principles)
+APIキーや複雑な設定に依存せず、Linux本来の力を引き出すための「成功の三原則」を具現化したツールです。
 
+1. **Terminal Mastery**: GUIを捨て、コマンドで意志を伝える。
+2. **Infrastructure Creation**: 瞬時に開発環境を自動構築。
+3. **Code Drawing**: エディタを開かず、思考をコードとして描画する。
 
-# Installation
-
-**PyMuPDF** requires **Python 3.9 or later**, install using **pip** with:
-
-`pip install PyMuPDF`
-
-There are **no mandatory** external dependencies. However, some [optional features](#pymupdf-optional-features) become available only if additional packages are installed.
-
-You can also try without installing by visiting [PyMuPDF.io](https://pymupdf.io/#examples).
-
-
-# Usage
-
-Basic usage is as follows:
-
-```python
-import pymupdf # imports the pymupdf library
-doc = pymupdf.open("example.pdf") # open a document
-for page in doc: # iterate the document pages
-  text = page.get_text() # get plain text encoded as UTF-8
-
-```
-
-
-# Documentation
-
-Full documentation can be found on [pymupdf.readthedocs.io](https://pymupdf.readthedocs.io).
-
-
-
-# <a id="pymupdf-optional-features"></a>Optional Features
-
-* [fontTools](https://pypi.org/project/fonttools/) for creating font subsets.
-* [pymupdf-fonts](https://pypi.org/project/pymupdf-fonts/) contains some nice fonts for your text output.
-* [Tesseract-OCR](https://github.com/tesseract-ocr/tesseract) for optical character recognition in images and document pages.
-
-
-
-# About
-
-**PyMuPDF** adds **Python** bindings and abstractions to [MuPDF](https://mupdf.com/), a lightweight **PDF**, **XPS**, and **eBook** viewer, renderer, and toolkit. Both **PyMuPDF** and **MuPDF** are maintained and developed by [Artifex Software, Inc](https://artifex.com).
-
-**PyMuPDF** was originally written by [Jorj X. McKie](mailto:jorj.x.mckie@outlook.de).
-
-
-# License and Copyright
-
-**PyMuPDF** is available under [open-source AGPL](https://www.gnu.org/licenses/agpl-3.0.html) and commercial license agreements. If you determine you cannot meet the requirements of the **AGPL**, please contact [Artifex](https://artifex.com/contact/pymupdf-inquiry.php) for more information regarding a commercial license.
-
-
-
-
+[詳細はこちら（GitHub Pages）](https://h011145.github.io/hirosi-web-test-02/achievements.html)

@@ -3,88 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ブログ</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>実績 - リナックス研究会</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="index.html">My Website</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.html">Home</a>
-                </li>
-                <li class="nav-item active">
-                    <a class="nav-link" href="achievements.html">Achievements <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="activity.html">Activity</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="contact.html">Contact</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="events.html">Events</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="members.html">Members</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <div class="container mt-5">
-        <h1>ブログ</h1>
-
-        <div class="blog-post">
-            <h2 class="blog-title">CUIの優位性とその歴史</h2>
-            <div class="blog-content">
-                <p>
-                    CUI (Character User Interface) は、GUI (Graphical User Interface) が普及する以前から存在し、コンピュータを操作するための基本的なインターフェースでした。
-                    CUIは、GUIと比較して以下のような優位性があります。
-                </p>
-                <ul>
-                    <li>軽量で高速: CUIは、GUIよりも必要なリソースが少なく、高速に動作します。</li>
-                    <li>柔軟性が高い: CUIは、様々なコマンドを組み合わせて、複雑な処理を効率的に行うことができます。</li>
-                    <li>自動化に適している: CUIは、スクリプトやバッチ処理と組み合わせて、作業を自動化することができます。</li>
+<body class="bg-light font-monospace">
+    <div class="container py-5">
+        <h1 class="display-5 mb-4 border-bottom pb-2">主要実績・成果物</h1>
+        
+        <div class="card shadow-sm mb-4 border-primary">
+            <div class="card-body">
+                <h2 class="card-title text-primary h4">Linux 攻略・開発スターターキット (成功の三原則)</h2>
+                <p class="text-muted small">開発元: リナックス研究会 (ドクターひろし提唱)</p>
+                <hr>
+                <p>APIキー不要。メール送信不要。エディタ不要。Linuxの真髄を「支配」するための最小・最強のツールセット。</p>
+                <ul class="list-group list-group-flush mt-3">
+                    <li class="list-group-item bg-transparent"><strong class="text-primary">第1原則：ターミナルの制覇</strong><br>GUIの迷宮を脱出し、コマンドという「直線道路」で開発を進める。</li>
+                    <li class="list-group-item bg-transparent"><strong class="text-primary">第2原則：mkdir 世界創造</strong><br>環境構築を自動化し、整理された空間で完璧なアルゴリズムを構築する。</li>
+                    <li class="list-group-item bg-transparent"><strong class="text-primary">第3原則：cat コード描画術</strong><br>思考を中断させない。ボタン一つで考えをスクリプト（現実）に反映させる。</li>
                 </ul>
-                <p>
-                    CUIの歴史は、1960年代の初期のコンピュータシステムにまで遡ります。
-                    当時は、テレタイプ端末と呼ばれる文字入出力装置を使って、コンピュータを操作していました。
-                    1970年代になると、CRTディスプレイが登場し、CUIの操作性が向上しました。
-                    1980年代には、MS-DOSなどのOSが普及し、CUIが広く使われるようになりました。
-                    現在では、GUIが主流となっていますが、CUIは、サーバー管理や開発作業など、特定の分野で依然として重要な役割を果たしています。
-                </p>
-                <p>
-                    近いうちに、CUIのレビューイベントを開催する予定です。
-                    興味のある方は、ぜひご参加ください。
-                </p>
             </div>
         </div>
 
-        <div class="blog-post">
-            <h2 class="blog-title">じぇみにと作ろう</h2>
-            <div class="blog-content">
-                <p>
-                    リナックスの何がいいかっていうと　コンソールですぐに実行出来てしまうということが、あげられます。これは、AIの得意分野であるテキスト生成と非常に相性がいいコンピューターで、これからますますこのCUIが注目されることになるだろう。
-                </p>
-            </div>
+        <div class="mt-4">
+            <a href="index.html" class="btn btn-outline-secondary btn-sm">トップページに戻る</a>
         </div>
     </div>
-
-    <footer class="text-center mt-5">
-        <section>
-            <h2>次回のトピック</h2>
-            <p>次回は、AIと倫理についてのディスカッションを予定しています。</p>
-        </section>
-    </footer>
-    
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
