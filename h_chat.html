@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H-CODE INTELLIGENCE TERMINAL // LPC-LINKED</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
+        body {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Fira Code', monospace;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .scanline {
+            width: 100%; height: 100px; z-index: 99; pointer-events: none;
+            background: linear-gradient(0deg, rgba(0, 255, 0, 0) 0%, rgba(0, 255, 0, 0.05) 50%, rgba(0, 255, 0, 0) 100%);
+            opacity: 0.1; position: fixed; bottom: 100%; animation: scanline 8s linear infinite;
+        }
+        @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
+
+        .terminal-grid { display: grid; grid-template-columns: 1fr 350px; height: 100vh; gap: 1px; background: #030; }
+        .main-panel { background: #000; display: flex; flex-direction: column; padding: 20px; }
+        .side-panel { background: #050505; border-left: 1px solid #0f0; padding: 20px; display: flex; flex-direction: column; }
+        
+        .section-title { font-size: 0.8rem; color: #0f0; border-bottom: 1px solid #0f0; margin-bottom: 15px; padding-bottom: 5px; font-weight: bold; }
+        
+        #dictionary-log { flex-grow: 1; overflow-y: auto; font-size: 0.8rem; margin-bottom: 20px; }
+        .dic-entry { border-bottom: 1px solid #020; padding: 10px 0; animation: slideIn 0.3s; }
+        @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        .h-badge { background: #0f0; color: #000; font-weight: bold; padding: 1px 6px; border-radius: 2px; margin-right: 8px; }
+        
+        #input-area { background: #080808; border: 1px solid #0f0; padding: 15px; }
+        textarea { width: 100%; background: transparent; border: none; outline: none; color: #0f0; font-family: inherit; font-size: 0.9rem; height: 80px; resize: none; }
+        
+        .btn-lpc { background: #0f0; color: #000; font-weight: bold; padding: 10px; width: 100%; margin-top: 10px; text-align: center; cursor: pointer; }
+        .btn-lpc:hover { background: #fff; box-shadow: 0 0 15px #0f0; }
+
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+
+    <div class="terminal-grid">
+        <!-- Main Analysis Panel -->
+        <div class="main-panel">
+            <div class="section-title">H-CODE REVERSE MACHINE CODE DICTIONARY // LIVE_MONITOR</div>
+            <div id="dictionary-log">
+                <div class="dic-entry text-green-800">>>> SYSTEM INITIALIZED. NO API DEPENDENCY DETECTED.</div>
+                <div class="dic-entry">SYSTEM: LCPプロトコル経由の辞書データ待機中...</div>
+            </div>
+
+            <div id="input-area">
+                <div class="text-[10px] text-green-700 mb-2">// PASTE LCP-COMMAND (cat << 'EOF' ...) OR TEXT HERE</div>
+                <textarea id="raw-input" placeholder="外部AIからの出力をペースト、または解析対象の感情を入力..."></textarea>
+                <div class="flex gap-2">
+                    <div class="btn-lpc flex-grow" onclick="processInput()">DECODE & SYNC</div>
+                    <div class="btn-lpc w-1/3 bg-green-900 text-green-400" onclick="copyPrompt()">GET LCP PROMPT</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Intelligence Panel -->
+        <div class="side-panel text-xs">
+            <div class="section-title">STATUS</div>
+            <div class="mb-6">
+                OS: <span class="text-white">HIROSHI-LINUX v2.0</span><br>
+                SYNC: <span class="text-white blink">ACTIVE</span><br>
+                DIC_SIZE: <span id="dic-count" class="text-white">0</span> ENTRIES
+            </div>
+
+            <div class="section-title">LCP THEORY: LCP-02</div>
+            <div class="text-green-700 leading-relaxed mb-6">
+                1. Single Stroke (一撃)<br>
+                2. Idempotency (冪等性)<br>
+                3. Silent Success (沈黙)
+            </div>
+
+            <div class="section-title">H-CODE REFERENCE</div>
+            <div id="reference" class="opacity-60 overflow-y-auto flex-grow">
+                0: Void/Reset<br>
+                1: Beginning<br>
+                2: Duality/Choice<br>
+                3: Creativity<br>
+                4: Stability<br>
+                5: Crisis/Trial<br>
+                6: Harmony<br>
+                7: Insight<br>
+                8: Achievement<br>
+                9: Wisdom/End
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dictionary = [];
+
+        const h_map = {
+            0: "Void", 1: "Begin", 2: "Duality", 3: "Create", 4: "Stable",
+            5: "Crisis", 6: "Harmony", 7: "Insight", 8: "Power", 9: "Wisdom"
+        };
+
+        function addEntry(text, code) {
+            const entry = { text, code, time: new Date().toLocaleTimeString() };
+            dictionary.unshift(entry);
+            renderDictionary();
+        }
+
+        function renderDictionary() {
+            const log = document.getElementById('dictionary-log');
+            const count = document.getElementById('dic-count');
+            log.innerHTML = '';
+            dictionary.forEach(e => {
+                const div = document.createElement('div');
+                div.className = 'dic-entry';
+                div.innerHTML = `
+                    <div class="flex items-center mb-1">
+                        <span class="h-badge">${e.code}</span>
+                        <span class="text-[10px] text-green-700">${e.time}</span>
+                    </div>
+                    <div class="text-white opacity-80">${e.text}</div>
+                `;
+                log.appendChild(div);
+            });
+            count.innerText = dictionary.length;
+        }
+
+        function processInput() {
+            const raw = document.getElementById('raw-input').value.trim();
+            if(!raw) return;
+
+            // LCP形式(catコマンド)の簡易パース
+            if (raw.includes('cat <<')) {
+                const lines = raw.split('\n');
+                lines.forEach(line => {
+                    const match = line.match(/"([^"]+)",\s*"(\d\(\d\))"/);
+                    if (match) addEntry(match[1], match[2]);
+                });
+                document.getElementById('raw-input').value = '';
+                return;
+            }
+
+            // 直接入力の場合の疑似解析 (本来は外部AIに行わせるが、デモ用に実装)
+            const mockCode = `${Math.floor(Math.random()*10)}(${Math.floor(Math.random()*10)})`;
+            addEntry(raw, mockCode);
+            document.getElementById('raw-input').value = '';
+        }
+
+        function copyPrompt() {
+            const prompt = `あなたはHコード解析エージェントです。以下のチャット内容をHコード(A(B)形式)で解析し、LCPプロトコルに従って以下の形式で出力してください。
+命令: cat << 'EOF' >> h_code_dictionary.json
+"テキスト内容", "A(B)"
+EOF
+解析対象: [ここに入力内容]`;
+            navigator.clipboard.writeText(prompt);
+            alert("LCPプロンプトをクリップボードにコピーしました。外部AIに貼り付けてください。");
+        }
+
+        window.onload = () => document.getElementById('raw-input').focus();
+    </script>
+</body>
+</html>
