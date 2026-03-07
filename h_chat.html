@@ -122,7 +122,7 @@
             let previewText = "No Shadow data detected.";
             const base64Match = raw.match(/echo\s+"([^"]+)"\s*\|\s*base64/);
             if (base64Match) {
-                try { previewText = "DECODED: " + decodeURIComponent(escape(atob(base64Match[1]))); }
+                try { previewText = "DECODED: " + decodeURIComponent(escape(atob(base64Match[1] || base64Match[2]))); }
                 catch(e) { previewText = "ERROR: Failed to decode."; }
             }
             div.innerHTML = `<span class="text-purple-400">DATA RECEIVED:</span><br><div class="preview-box">${previewText}</div>`;
