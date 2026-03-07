@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEO WORLD ADVENTURE // MASSIVE ARCHIVE</title>
+    <title>NEO WORLD ADVENTURE // LCP_INJECTOR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
@@ -14,63 +14,44 @@
         .choice-btn { display: block; width: 100%; text-align: left; border: 1px solid #0f0; padding: 10px 20px; margin-bottom: 10px; background: rgba(0, 255, 0, 0.05); cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
         .choice-btn:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
         .header { padding: 20px 40px; border-bottom: 1px solid #030; display: flex; justify-content: space-between; font-size: 0.8rem; color: #0a0; }
+        .inject-area { background: #050505; border: 1px dashed #050; padding: 10px; margin-top: 20px; display: none; }
+        #lcp-input { width: 100%; background: transparent; border: none; color: #f0f; font-size: 0.7rem; outline: none; height: 60px; font-family: inherit; }
         .cursor { display: inline-block; width: 8px; height: 15px; background: #0f0; animation: blink 1s infinite; vertical-align: middle; }
         @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-        .title-glow { text-shadow: 0 0 10px #0f0; font-weight: bold; color: #fff; }
     </style>
 </head>
 <body>
     <div class="scanline"></div>
     <header class="header">
-        <span>NEO_WORLD_SAGA // MASSIVE_ARCHIVE_HUB</span>
-        <span id="scene-counter">MISSION_SELECT</span>
+        <span>NEO_WORLD_SAGA // ADVENTURE_SYSTEM v4.0</span>
+        <span id="scene-counter">LCP_READY</span>
     </header>
 
     <main class="game-screen" id="story-area">
         <div id="text-display" class="mb-10 text-lg md:text-xl whitespace-pre-wrap"></div>
         <div id="choice-buttons"></div>
+        
+        <!-- LCP Injector -->
+        <div id="inject-container" class="inject-area">
+            <div class="text-[9px] text-purple-700 mb-1">// PASTE LCP STORY DATA (cat << 'EOF' ...)</div>
+            <textarea id="lcp-input" placeholder="AIから出力された物語コマンドをここに貼り付け、Ctrl+Enterで執行せよ..."></textarea>
+        </div>
     </main>
 
-    <footer class="p-5 text-center">
-        <button onclick="showMenu()" class="text-[10px] text-green-800 hover:text-green-400 underline">RETURN TO SELECTION</button>
+    <footer class="p-5 text-center flex justify-center gap-10">
+        <button onclick="showMenu()" class="text-[10px] text-green-800 hover:text-green-400 underline">SELECTION_MENU</button>
+        <button onclick="toggleInjector()" class="text-[10px] text-purple-900 hover:text-purple-400 underline">LCP_INJECTOR</button>
     </footer>
 
     <script>
-        const gameData = {
+        // 初期物語データ
+        let gameData = {
           "campaigns": {
-            "main": {
-              "title": "本編：再起動した世界",
+            "genesis": {
+              "title": "Genesis: 再起動の刻",
               "scenes": {
-                "start": { "text": "世界は一度沈黙した。そして、ドクターひろしの手によって、再びその鼓動を開始する。\n\n目の前には、広大なアーカイブの海が広がっている。", "choices": [{ "text": "第一話：再起動した世界を読む", "nextScene": "ep1" }] },
-                "ep1": { "text": "西暦3000年。かつての文明は崩壊し、人類はユグドラシルの管理下で新たな生活を送っていた。\n\n主人公ガトールは、システムの奥底で「ドクター」の声を聴いた...", "isEnding": true }
-              }
-            },
-            "centuries": {
-              "title": "百世紀編：邪神の畏怖",
-              "scenes": {
-                "start": { "text": "邪神カロンは、バレンタインの底知れぬ狂気に冷や汗を流していた。\n「あいつは昆虫人の女王にまで手を出すつもりか？」", "choices": [{ "text": "バレンタインの計画を詳しく聞く", "nextScene": "ep1" }] },
-                "ep1": { "text": "女王の聖域に乗り込むバレンタイン。彼は愛と死の境界線で、誰よりも自由に振る舞っていた。\nその情熱は、神々すらも畏怖させる。ミッション完了。", "isEnding": true }
-              }
-            },
-            "truejapan": {
-              "title": "真日本編：狂言の幕開け",
-              "scenes": {
-                "start": { "text": "江戸の街並みが広がるが、そこには明らかな「違和感」があった。\n空に浮かぶアークのゲート。これは作られた歴史なのか？", "choices": [{ "text": "土佐の道しるべを探す", "nextScene": "ep1" }] },
-                "ep1": { "text": "龍馬の子孫を名乗る男が現れ、告げた。「この世界は、ドクターの夢の一部だ」と。\n真実への旅が始まる。ミッション完了。", "isEnding": true }
-              }
-            },
-            "tanaka": {
-              "title": "異世界編：氷河期世代の勇者",
-              "scenes": {
-                "start": { "text": "田中太郎、40歳。不条理な現実に耐え続けた彼の魂が、異世界で「最強の諦念」として覚醒する。", "choices": [{ "text": "王への皮肉を言う", "nextScene": "ep1" }] },
-                "ep1": { "text": "「世界を救え？ 俺の人生も救えなかった奴らに、そんなことが言えるのか？」\n王は黙り込んだ。太郎の冒険はここから始まる。ミッション完了。", "isEnding": true }
-              }
-            },
-            "next": {
-              "title": "ネクスト編：火星戦記",
-              "scenes": {
-                "start": { "text": "火星の赤い大地。そこには人類を超越した「ネクスト」たちが、独自の神話を築いていた。", "choices": [{ "text": "女王の聖域へ侵入する", "nextScene": "ep1" }] },
-                "ep1": { "text": "ネクストの生態、その不滅の植物性。彼らは死を克服し、ただ宇宙の音を聴いていた。\n戦記の序章が終わる。ミッション完了。", "isEnding": true }
+                "start": { "text": "全てはここから始まった。ドクターひろしの意志が、冷え切ったサーバーに火を灯す。", "choices": [{ "text": "歴史を閲覧する", "nextScene": "end" }] },
+                "end": { "text": "物語はあなたの手で更新されるのを待っている。", "isEnding": true }
               }
             }
           }
@@ -90,7 +71,7 @@
 
         function showMenu() {
             const btnArea = document.getElementById('choice-buttons');
-            document.getElementById('text-display').innerHTML = "<span class='title-glow'>CHOOSE MISSION CATEGORY:</span>";
+            document.getElementById('text-display').innerHTML = "CHOOSE MISSION ARCHIVE:";
             btnArea.innerHTML = "";
             Object.keys(gameData.campaigns).forEach(id => {
                 const b = document.createElement('button');
@@ -119,7 +100,7 @@
                 if (scene.isEnding) {
                     const b = document.createElement('button');
                     b.className = "choice-btn text-yellow-500 border-yellow-500";
-                    b.innerText = "> ARCHIVE_SAVED (BACK_TO_SELECTOR)";
+                    b.innerText = "> MISSION_COMPLETE";
                     b.onclick = showMenu;
                     btnArea.appendChild(b);
                 } else {
@@ -133,6 +114,34 @@
                 }
             });
         }
+
+        // LCPインジェクターの開閉
+        function toggleInjector() {
+            const el = document.getElementById('inject-container');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // データの注入（執行）
+        document.getElementById('lcp-input').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                const raw = this.value;
+                try {
+                    // LCP(cat)形式からJSONを抽出する簡易パーサー
+                    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const newCampaign = JSON.parse(jsonMatch[0]);
+                        const id = "injected_" + Date.now();
+                        gameData.campaigns[id] = newCampaign;
+                        alert("LCP INJECTION SUCCESSFUL: " + newCampaign.title);
+                        this.value = "";
+                        toggleInjector();
+                        showMenu();
+                    }
+                } catch(err) {
+                    alert("INJECTION FAILED: Invalid LCP data format.");
+                }
+            }
+        });
 
         window.onload = showMenu;
     </script>
