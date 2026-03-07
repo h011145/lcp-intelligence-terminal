@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCP PROTOCOL SPECIFICATION // TOP SECRET</title>
+    <title>LCP FAMILY SPECIFICATION // TOTAL_SYNCHRONIZATION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
         body { background-color: #000; color: #0f0; font-family: 'Fira Code', monospace; line-height: 1.6; }
-        .scanline { width: 100%; height: 100px; z-index: 99; pointer-events: none; background: linear-gradient(0deg, rgba(0, 255, 0, 0) 0%, rgba(0, 255, 0, 0.05) 50%, rgba(0, 255, 0, 0) 100%); opacity: 0.1; position: fixed; bottom: 100%; animation: scanline 8s linear infinite; }
+        .scanline { width: 100%; height: 100px; z-index: 999; pointer-events: none; background: linear-gradient(0deg, rgba(0, 255, 0, 0) 0%, rgba(0, 255, 0, 0.05) 50%, rgba(0, 255, 0, 0) 100%); opacity: 0.1; position: fixed; bottom: 100%; animation: scanline 8s linear infinite; }
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
-        .container { max-width: 800px; margin: 0 auto; padding: 50px 20px; }
-        h1, h2 { color: #0f0; font-weight: bold; border-bottom: 1px solid #030; padding-bottom: 10px; margin-top: 40px; }
-        .spec-item { margin-bottom: 30px; border-left: 2px solid #030; padding-left: 20px; }
-        .highlight { color: #fff; background: #050; padding: 0 5px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 80px 20px; }
+        h1, h2, h3 { color: #0f0; font-weight: bold; border-bottom: 1px solid #030; padding-bottom: 10px; margin-top: 50px; }
+        .spec-card { background: rgba(0, 20, 0, 0.5); border: 1px solid #030; padding: 20px; margin-bottom: 30px; border-left: 5px solid #0f0; }
+        .protocol-title { font-size: 1.2rem; color: #ff0; font-weight: bold; margin-bottom: 10px; display: block; }
+        pre { background: #050505; color: #0a0; padding: 15px; font-size: 0.8rem; overflow-x: auto; border: 1px solid #020; margin-top: 10px; }
+        .highlight { color: #fff; background: #900; padding: 0 5px; }
         .back-link { color: #0f0; text-decoration: none; border: 1px solid #0f0; padding: 5px 15px; font-size: 0.8rem; }
         .back-link:hover { background: #0f0; color: #000; }
     </style>
@@ -21,32 +23,74 @@
 <body>
     <div class="scanline"></div>
     <div class="container">
-        <header class="mb-10">
-            <h1 class="text-3xl font-bold">LCP SYNCHRONIZER v4.0 SPEC</h1>
-            <p class="text-xs opacity-50">UNIVERSAL COMMAND HUB // THE REVERSE MACHINE CODE</p>
+        <header class="mb-20">
+            <h1 class="text-4xl font-bold">LCP FAMILY : TOTAL SPECIFICATION</h1>
+            <p class="text-xs opacity-50 mt-2">LINUX COMMUNICATION PROTOCOL // THE NEURAL NETWORK OF AI</p>
         </header>
 
-        <section class="spec-item">
-            <h2>01. CONCEPT</h2>
-            <p>API制限という物理的障壁を「LCP（Linux Communication Protocol）」により無効化。外部AI資源を「LCP執行官」へと変貌させ、人間とAIの知能を100%の精度で同期させる。</p>
+        <!-- 基本原則 -->
+        <section class="mb-20">
+            <h2>00. THE CORE CONSTITUTION</h2>
+            <div class="spec-card">
+                <p>すべてのLCPは共通の哲学を遵守する：</p>
+                <p class="mt-4"><span class="highlight">「人間にコードを触らせない」</span></p>
+                <p>AIがcatで描画し、mkdirで空間を定義。人間は一切の改変を行わず、意志の執行者としてのみ機能せよ。</p>
+            </div>
         </section>
 
-        <section class="spec-item">
-            <h2>02. REVERSE MACHINE CODE</h2>
-            <p><span class="highlight">H-CODE</span>: 感情の波を論理数値（0-9）にデコードし、AIに「人類の心のOS」を操作可能にするためのバイナリ命令セット。</p>
-        </section>
+        <!-- ファミリーコレクション -->
+        <h2>01. PROTOCOL VARIANTS (亜種コレクション)</h2>
 
-        <section class="spec-item">
-            <h2>03. PROTOCOLS</h2>
-            <ul>
-                <li><strong>P-01: LCP-CORE</strong> - AIの初期化。一撃必殺・冪等性・沈黙の成功を強いる。</li>
-                <li><strong>P-02: H-CODE</strong> - 感情波形解析。catコマンド形式での出力同期。</li>
-                <li><strong>P-03: EXTENSIBLE</strong> - 新規命令セットのための拡張スロット。</li>
-            </ul>
-        </section>
+        <!-- LCP-IPC -->
+        <div class="spec-card">
+            <span class="protocol-title">LCP-IPC: Inter-Process Communication</span>
+            <p class="text-xs opacity-70">目的: プロセス間通信の意志的直接執行</p>
+            <pre>mkdir -p /tmp/lcp_ipc/{in,out,err}
+# sender.lcp
+意志: "データをプロセスBに送信" -> 執行: echo "DATA" | cat > /tmp/lcp_ipc/in/pipe</pre>
+        </div>
 
-        <footer class="mt-20 pt-10 border-t border-green-900">
+        <!-- LCP-NET -->
+        <div class="spec-card">
+            <span class="protocol-title">LCP-NET: Network Protocol</span>
+            <p class="text-xs opacity-70">目的: ネットワーク通信の意志的直接描画</p>
+            <pre># server.lcp
+意志: "PORT 8080で待機" -> 執行: nc -l -p 8080 -q 1</pre>
+        </div>
+
+        <!-- LCP-FS -->
+        <div class="spec-card">
+            <span class="protocol-title">LCP-FS: Filesystem Protocol</span>
+            <p class="text-xs opacity-70">目的: ファイルシステム操作の意志的直接執行</p>
+            <pre># watcher.lcp
+意志: "ディレクトリ監視" -> 執行: inotifywait -m ~/lcp_fs/incoming</pre>
+        </div>
+
+        <!-- LCP-DB -->
+        <div class="spec-card">
+            <span class="protocol-title">LCP-DB: Database Protocol</span>
+            <p class="text-xs opacity-70">目的: データベース操作の意志的直接執行</p>
+            <pre># insert.lcp
+意志: "レコード追加" -> 執行: sqlite3 ~/lcp_db/data.db "INSERT INTO..."</pre>
+        </div>
+
+        <!-- LCP-CRON -->
+        <div class="spec-card">
+            <span class="protocol-title">LCP-CRON: Scheduled Protocol</span>
+            <p class="text-xs opacity-70">目的: 定時実行の意志を直接cronに描画</p>
+            <pre>意志: "AM 3:00 BACKUP" -> 執行: (crontab -l; echo "0 3 * * * ...") | crontab -</pre>
+        </div>
+
+        <!-- LCP-GIT -->
+        <div class="spec-card">
+            <span class="protocol-title">LCP-GIT: Version Control Protocol</span>
+            <p class="text-xs opacity-70">目的: Git操作の意志的直接執行</p>
+            <pre>意志: "AUTO PUSH" -> 執行: git add . && git commit && git push</pre>
+        </div>
+
+        <footer class="mt-32 pt-10 border-t border-green-900">
             <a href="index.html" class="back-link">< RETURN TO TERMINAL</a>
+            <p class="mt-10 text-[10px] opacity-30 text-center">(C) 2026 LINUX RESEARCH GROUP - DR. HIROSHI</p>
         </footer>
     </div>
 </body>
