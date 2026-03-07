@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCP MISSION CONTROL // v7.0 ROADMAP_DRIVEN</title>
+    <title>LCP MISSION CONTROL // v8.0 ONE-SHOT_DEPLOYER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
         body { background-color: #000; color: #0f0; font-family: 'Fira Code', monospace; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
         .scanline { width: 100%; height: 100px; z-index: 999; pointer-events: none; background: linear-gradient(0deg, rgba(0, 255, 0, 0) 0%, rgba(0, 255, 0, 0.05) 50%, rgba(0, 255, 0, 0) 100%); opacity: 0.1; position: fixed; bottom: 100%; animation: scanline 8s linear infinite; }
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
-        /* パスワードロックを解除 */
         #auth-overlay { display: none; }
         .terminal-grid { display: grid; grid-template-columns: 1fr 450px; height: 100vh; gap: 1px; background: #030; filter: none; pointer-events: auto; transition: filter 0.5s; }
         
@@ -24,16 +23,22 @@
         .btn-gen { background: #030; color: #0f0; border: 1px solid #0f0; padding: 8px; width: 100%; margin-bottom: 8px; text-align: center; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
         .btn-gen:hover { background: #0f0; color: #000; }
         .btn-sync { background: #900090; color: #fff; font-weight: bold; padding: 12px; width: 100%; margin-top: 10px; text-align: center; cursor: pointer; }
+        .btn-osce { background: #f0f; color: #000; font-weight: 900; padding: 15px; width: 100%; margin-bottom: 20px; text-align: center; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 20px #f0f; }
+        .btn-osce:hover { background: #fff; color: #f0f; box-shadow: 0 0 40px #fff; }
         textarea { width: 100%; background: #080808; border: 1px solid #333; outline: none; color: #f0f; font-family: inherit; font-size: 0.8rem; height: 100px; resize: none; padding: 10px; }
     </style>
 </head>
 <body>
     <div class="scanline"></div>
-    <!-- 認証オーバーレイは非表示に設定 -->
     <div id="auth-overlay" style="display:none;"></div>
 
     <div id="protected-terminal" class="terminal-grid">
         <div class="main-panel">
+            <!-- 究極の一撃必殺ボタン: OSCE (One-Shot Command Execution) -->
+            <div class="section-title text-fuchsia-500">LCP-OSCE // ULTIMATE_ONE-SHOT_DEPLOYER</div>
+            <div class="btn-osce" onclick="copyOSCEPrompt()">⚡ GENERATE ONE-SHOT COMMAND (MKDIR + CAT) ⚡</div>
+            <p class="text-[9px] text-fuchsia-800 mb-6 text-center italic">"場所を作り、中身を流し込む。一撃で現実を書き換えよ。"</p>
+
             <div class="section-title text-yellow-500">MISSION ROADMAP // PHASE_CONTROL</div>
             <div id="roadmap-list">
                 <div class="p-2 text-gray-600 italic">No Roadmap loaded. Paste Blueprint JSON below.</div>
@@ -73,21 +78,20 @@
         let currentRoadmap = [];
         let selectedPhase = null;
 
-        // 認証関数は常に成功するように変更
-        function handleAuth(e) { 
-            document.getElementById('auth-overlay').style.display = 'none'; 
-            document.getElementById('protected-terminal').style.filter = 'none'; 
-            document.getElementById('protected-terminal').style.pointerEvents = 'auto'; 
+        // 【LCP-OSCE】 一撃必殺デプロイヤー用プロンプト
+        function copyOSCEPrompt() {
+            const p = `あなたはLCP(Linux Communication Protocol)執行AIエージェントです。これから依頼するプロジェクトの全構造を、以下のルールを厳守して【一撃必殺のBashコマンドブロック】として出力せよ。\\n\\n【執行ルール】\\n1. 余計な挨拶、解説、導入、続きの提案、マークダウンの装飾は一切不要。\\n2. 出力はそのままターミナルに貼り付けて実行可能なBashスクリプトのみとする。\\n3. ディレクトリ作成は \`mkdir -p\` を使用せよ。\\n4. ファイル作成は \`cat << 'EOF' > パス名\` ... \`EOF\` の形式で、各ファイルの内容を漏らさず記述せよ。\\n5. 最後に実行権限の付与 (\`chmod +x\`) が必要な場合は含めること。\\n6. すべてのコマンドを \`&&\` で連結するか、一連の実行ブロックとしてまとめよ。\\n\\n【プロジェクト目的】：[ここに目的を入力してください]`;
+            navigator.clipboard.writeText(p.replace(/\\\\n/g, '\\n'));
+            alert("ULTIMATE OSCE PROMPT COPIED. Feed this to AI with your project goal.");
         }
 
-        // 01. ロードマップ作成用プロンプト
+        // ロードマップ作成用プロンプト
         function copyBlueprintPrompt() {
             const p = `あなたはプロジェクトマネージャーAIです。これから行う「長編開発ミッション」の全体像を、一撃必殺のJSON形式のみで出力せよ。\\n\\n出力形式：\\n[ {"phase": 1, "task": "作業名", "detail": "詳細"}, ... ]\\n\\n※解説は不要。JSONのみを出力せよ。プロジェクトの目的は：[ここに目的を入力]`;
             navigator.clipboard.writeText(p.replace(/\\\\n/g, '\\n'));
             alert("BLUEPRINT PROMPT COPIED. Ask AI for the roadmap JSON.");
         }
 
-        // ロードマップJSONの読み込み
         function loadRoadmap() {
             const val = document.getElementById('blueprint-input').value.trim();
             try {
@@ -105,7 +109,6 @@
             } catch(e) { alert("ERROR: Invalid JSON format."); }
         }
 
-        // 特定のフェーズを選択
         function selectPhase(index) {
             selectedPhase = currentRoadmap[index];
             document.querySelectorAll('.phase-btn').forEach((b, i) => {
@@ -124,7 +127,6 @@
 
         function processSync() {
             const raw = document.getElementById('raw-input').value;
-            // モニター表示用の要素がないため、必要なら追加するかアラートで対応
             alert("DATA SYNCED FOR PHASE " + (selectedPhase ? selectedPhase.phase : "UNKNOWN"));
             document.getElementById('raw-input').value = '';
         }
