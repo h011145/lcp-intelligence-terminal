@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCP SYNCHRONIZER // CLASSIFIED ACCESS</title>
+    <title>LCP SYNCHRONIZER // LICENSE_MANAGER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
@@ -12,17 +12,16 @@
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
         
         #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 20px solid #100; }
-        .auth-box { border: 1px solid #f00; padding: 40px; background: rgba(20, 0, 0, 0.9); text-align: center; box-shadow: 0 0 50px rgba(255, 0, 0, 0.2); }
+        .auth-box { border: 1px solid #f00; padding: 40px; background: rgba(20, 0, 0, 0.9); text-align: center; }
         .auth-title { color: #f00; font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; letter-spacing: 5px; }
-        .auth-input { background: #000; border: 1px solid #f00; color: #f00; padding: 10px; text-align: center; outline: none; font-size: 1.2rem; width: 250px; }
+        .auth-input { background: #000; border: 1px solid #f00; color: #f00; padding: 10px; text-align: center; outline: none; font-size: 1rem; width: 300px; }
         
-        .terminal-grid { display: grid; grid-template-columns: 1fr 450px; height: 100vh; gap: 1px; background: #030; filter: blur(10px); pointer-events: none; transition: filter 0.5s; }
+        .terminal-grid { display: grid; grid-template-columns: 1fr 450px; height: 100vh; gap: 1px; background: #030; filter: blur(15px); pointer-events: none; transition: filter 0.5s; }
         .main-panel { background: #000; display: flex; flex-direction: column; padding: 20px; }
-        .side-panel { background: #050505; border-left: 1px solid #0f0; padding: 20px; display: flex; flex-direction: column; }
+        .side-panel { background: #050505; border-left: 1px solid #0f0; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
         .section-title { font-size: 0.8rem; color: #0f0; border-bottom: 1px solid #0f0; margin-bottom: 15px; padding-bottom: 5px; font-weight: bold; }
-        .btn-gen { background: #030; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 100%; margin-bottom: 8px; text-align: center; cursor: pointer; transition: 0.2s; font-size: 0.75rem; font-weight: bold; }
+        .btn-gen { background: #030; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 100%; margin-bottom: 8px; text-align: center; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
         .btn-gen:hover { background: #0f0; color: #000; }
-        .btn-sync { background: #0f0; color: #000; font-weight: bold; padding: 12px; width: 100%; margin-top: 10px; text-align: center; cursor: pointer; }
         .blink { animation: blink 1s infinite; }
         @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
     </style>
@@ -34,9 +33,9 @@
     <div id="auth-overlay">
         <div class="auth-box">
             <div class="auth-title blink">ACCESS DENIED</div>
-            <p class="text-xs text-red-800 mb-6">CLASSIFIED TECHNOLOGY: LCP SYNCHRONIZER v4.2<br>CONTRACTED CLEARANCE REQUIRED</p>
-            <input type="password" id="access-code" class="auth-input" placeholder="ENTER CLEARANCE CODE" onkeypress="handleAuth(event)">
-            <p class="text-[10px] text-red-900 mt-6">UNAUTHORIZED ACCESS WILL BE LOGGED</p>
+            <p class="text-xs text-red-800 mb-6">LCP PROTOCOL v4.2 // SECURITY CLEARANCE REQUIRED</p>
+            <input type="password" id="access-code" class="auth-input" placeholder="ENTER LICENSE KEY OR CODE" onkeypress="handleAuth(event)">
+            <p class="text-[10px] text-red-900 mt-6">LICENSE KEYS ARE BOUND TO SPECIFIC CONTRACTS</p>
         </div>
     </div>
 
@@ -45,20 +44,25 @@
         <div class="main-panel">
             <div class="section-title">LCP REAL-TIME SYNC MONITOR // SECURE_CHANNEL</div>
             <div id="sync-monitor" class="flex-grow overflow-y-auto font-mono text-xs">
-                <div class="p-2 border-b border-green-900">>>> DECRYPTION COMPLETE.</div>
-                <div class="p-2 border-b border-green-900">>>> WELCOME, ARCHITECT.</div>
+                <div class="p-2 border-b border-green-900">>>> DECRYPTION COMPLETE. AUTHORIZED ACCESS GRANTED.</div>
             </div>
             <div class="p-4 bg-black border border-green-900">
-                <textarea class="w-full bg-transparent border-none text-green-500 outline-none h-20" placeholder="AWAITING INJECTION..."></textarea>
-                <div class="btn-sync">DECODE & SYNC</div>
+                <textarea id="raw-input" class="w-full bg-transparent border-none text-green-500 outline-none h-20" placeholder="AWAITING LCP DATA..."></textarea>
+                <button class="w-full bg-green-600 text-black font-bold p-2 mt-2 hover:bg-green-400" onclick="processSync()">DECODE & SYNC</button>
             </div>
         </div>
 
         <div class="side-panel">
-            <div class="section-title">LCP COMMAND HUB (ENCRYPTED)</div>
-            <div class="btn-gen">01. LCP-CORE INIT [SECURE]</div>
-            <div class="btn-gen">02. H-CODE DECODER [SECURE]</div>
-            <div class="btn-gen border-yellow-500 text-yellow-500">03. GENERATE SUCCESS TICKET</div>
+            <div class="section-title">LCP COMMAND HUB</div>
+            <div class="btn-gen" onclick="copyLCPCore()">01. LCP-CORE INIT</div>
+            <div class="btn-gen" onclick="copyHCode()">02. H-CODE DECODER</div>
+            <div class="btn-gen bg-yellow-900/30 text-yellow-500 border-yellow-500" onclick="generateTicket()">03. GENERATE SUCCESS TICKET & KEY</div>
+
+            <div class="section-title">LICENSE INFO</div>
+            <div id="license-display" class="p-3 bg-black border border-yellow-900 text-yellow-600 text-[10px] break-all">
+                NO ACTIVE LICENSE ISSUED
+            </div>
+
             <div class="mt-auto text-center border-t border-green-900 pt-5">
                 <a href="index.html" class="text-[10px] text-green-800 hover:text-green-400">< RETURN TO TERMINAL</a>
             </div>
@@ -66,19 +70,59 @@
     </div>
 
     <script>
+        // ライセンス検証ロジック
         function handleAuth(e) {
             if (e.key === 'Enter') {
-                const code = document.getElementById('access-code').value;
-                // ドクターひろし専用コード
-                if (code === 'success') {
+                const input = document.getElementById('access-code').value.trim();
+                
+                // マスターコード または 正しい形式のライセンスキー
+                // 形式: LCP-[数字]-SUCCESS
+                const licensePattern = /^LCP-(\d+)-SUCCESS$/;
+                if (input === 'success' || licensePattern.test(input)) {
                     document.getElementById('auth-overlay').style.display = 'none';
                     document.getElementById('protected-terminal').style.filter = 'none';
                     document.getElementById('protected-terminal').style.pointerEvents = 'auto';
                 } else {
-                    alert('INVALID CLEARANCE CODE. ACCESS DENIED.');
+                    alert('CRITICAL ERROR: INVALID LICENSE KEY.');
                     document.getElementById('access-code').value = '';
                 }
             }
+        }
+
+        // ライセンス付きチケットの発行
+        function generateTicket() {
+            const issueId = prompt("Enter Issue Number (e.g. 001):", "001");
+            if(!issueId) return;
+            
+            const licenseKey = `LCP-${issueId}-SUCCESS`;
+            const date = new Date().toISOString().split('T')[0];
+            
+            const ticketCmd = `cat << 'EOF' > LCP_SUCCESS_TICKET_${issueId}.json\\n{\\n  "ticket_id": "#${issueId}",\\n  "contractor": "Dr. Hiroshi",\\n  "status": "PAID & VERIFIED",\\n  "access_license": "${licenseKey}",\\n  "timestamp": "${date}"\\n}\\nEOF`;
+            
+            navigator.clipboard.writeText(ticketCmd.replace(/\\\\n/g, '\\n'));
+            document.getElementById('license-display').innerHTML = `ISSUED FOR #${issueId}:<br><span class="text-white font-bold">${licenseKey}</span>`;
+            
+            alert("SUCCESS TICKET & LICENSE KEY GENERATED!\\nLicense: " + licenseKey);
+        }
+
+        function copyLCPCore() {
+            const p = "あなたはLCP執行官です。一撃必殺・冪等性・沈黙の成功を遵守せよ。";
+            navigator.clipboard.writeText(p); alert("PROMPT COPIED.");
+        }
+
+        function copyHCode() {
+            const p = "Hコード解析を開始せよ。cat形式で辞書を追記せよ。";
+            navigator.clipboard.writeText(p); alert("H-CODE PROMPT COPIED.");
+        }
+
+        function processSync() {
+            const raw = document.getElementById('raw-input').value;
+            const log = document.getElementById('sync-monitor');
+            const div = document.createElement('div');
+            div.className = 'p-2 border-b border-green-900';
+            div.innerText = ">>> SYNCING: " + raw.substring(0,30) + "...";
+            log.prepend(div);
+            document.getElementById('raw-input').value = '';
         }
     </script>
 </body>
