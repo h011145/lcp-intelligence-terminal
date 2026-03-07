@@ -3,77 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LCP SYNCHRONIZER // SAFE_SHADOW_GATE</title>
+    <title>LCP SYNCHRONIZER // MASTER_GATE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
         body { background-color: #000; color: #0f0; font-family: 'Fira Code', monospace; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
         .scanline { width: 100%; height: 100px; z-index: 999; pointer-events: none; background: linear-gradient(0deg, rgba(0, 255, 0, 0) 0%, rgba(0, 255, 0, 0.05) 50%, rgba(0, 255, 0, 0) 100%); opacity: 0.1; position: fixed; bottom: 100%; animation: scanline 8s linear infinite; }
         @keyframes scanline { 0% { bottom: 100%; } 100% { bottom: -100%; } }
-        
-        #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 20px solid #100; }
+        #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .auth-box { border: 1px solid #f00; padding: 40px; background: rgba(20, 0, 0, 0.9); text-align: center; }
-        .auth-title { color: #f00; font-size: 1.5rem; font-weight: bold; margin-bottom: 20px; letter-spacing: 5px; }
-        .auth-input { background: #000; border: 1px solid #f00; color: #f00; padding: 10px; text-align: center; outline: none; font-size: 1rem; width: 300px; }
-        
+        .auth-input { background: #000; border: 1px solid #f00; color: #f00; padding: 10px; text-align: center; outline: none; font-size: 1.2rem; width: 350px; }
         .terminal-grid { display: grid; grid-template-columns: 1fr 450px; height: 100vh; gap: 1px; background: #030; filter: blur(15px); pointer-events: none; transition: filter 0.5s; }
         .main-panel { background: #000; display: flex; flex-direction: column; padding: 20px; }
         .side-panel { background: #050505; border-left: 1px solid #0f0; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
         .section-title { font-size: 0.8rem; color: #0f0; border-bottom: 1px solid #0f0; margin-bottom: 15px; padding-bottom: 5px; font-weight: bold; }
-        .sync-entry { border-bottom: 1px solid #020; padding: 10px 0; font-size: 0.75rem; }
-        .preview-box { background: #010; border: 1px dashed #808; color: #d0d; padding: 10px; margin-top: 5px; font-family: monospace; }
         .btn-gen { background: #030; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 100%; margin-bottom: 8px; text-align: center; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
         .btn-gen:hover { background: #0f0; color: #000; }
         .btn-sync { background: #900090; color: #fff; font-weight: bold; padding: 12px; width: 100%; margin-top: 10px; text-align: center; cursor: pointer; }
-        .blink { animation: blink 1s infinite; }
-        @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
     </style>
 </head>
 <body>
     <div class="scanline"></div>
-
     <div id="auth-overlay">
         <div class="auth-box">
-            <div class="auth-title blink">ACCESS DENIED</div>
-            <p class="text-xs text-red-800 mb-6">LCP PROTOCOL v5.1 // SECURE GATEWAY</p>
-            <input type="password" id="access-code" class="auth-input" placeholder="ENTER CLEARANCE CODE" onkeypress="handleAuth(event)">
+            <div class="text-red-600 font-bold mb-4">LCP SECURE ACCESS</div>
+            <input type="password" id="access-code" class="auth-input" placeholder="ENTER MASTER KEY" onkeypress="handleAuth(event)">
         </div>
     </div>
-
     <div id="protected-terminal" class="terminal-grid">
         <div class="main-panel">
-            <div class="section-title">SHADOW ANALYZER // REAL-TIME PREVIEW</div>
-            <div id="sync-monitor" class="flex-grow overflow-y-auto">
-                <div class="p-2 text-green-800">>>> AUTHENTICATION SUCCESSFUL.</div>
-                <div class="p-2 text-green-800">>>> PREVIEW MODE: ON. SAFETY GATE: ACTIVE.</div>
+            <div class="section-title">SHADOW MONITOR</div>
+            <div id="sync-monitor" class="flex-grow overflow-y-auto text-xs">
+                <div class="p-2 border-b border-green-900">>>> AUTHENTICATION SUCCESSFUL. MASTER KEY ACCEPTED.</div>
             </div>
             <div class="p-4 bg-black border border-purple-900">
-                <textarea id="raw-input" class="w-full bg-transparent border-none text-purple-500 outline-none h-20" placeholder="PASTE SHADOW DATA (Base64 Stream)..."></textarea>
+                <textarea id="raw-input" class="w-full bg-transparent border-none text-purple-500 outline-none h-20" placeholder="AWAITING SHADOW DATA..."></textarea>
                 <div class="btn-sync" onclick="processSync()">ANALYZE & VERIFY</div>
             </div>
         </div>
-
         <div class="side-panel">
-            <div class="section-title">COMMAND HUB [CLASSIFIED]</div>
+            <div class="section-title">COMMAND HUB</div>
             <div class="btn-gen" onclick="copyLCPCore()">01. LCP-CORE INIT</div>
-            <div class="btn-gen text-purple-400 border-purple-400" onclick="copyShadowProtocol()">02. GENERATE SHADOW PROMPT</div>
-            <div class="btn-gen border-yellow-500 text-yellow-500" onclick="generateTicket()">03. GENERATE SUCCESS TICKET</div>
-
-            <div class="section-title">SAFETY PREVIEW</div>
-            <div id="storage-cmd" class="p-3 bg-black border border-red-900 text-red-500 text-[10px] break-all mb-6">
-                AWAITING SHADOW STREAM...
-            </div>
-
-            <div class="mt-auto text-center border-t border-green-900 pt-5">
+            <div class="btn-gen" onclick="copyShadow()">02. SHADOW PROMPT</div>
+            <div class="btn-gen border-yellow-500 text-yellow-500" onclick="generateTicket()">03. GENERATE TICKET</div>
+            <div class="mt-auto text-center pt-5 border-t border-green-900">
                 <a href="index.html" class="text-[10px] text-green-800 hover:text-green-400">< RETURN TO TERMINAL</a>
             </div>
         </div>
     </div>
-
     <script>
         function handleAuth(e) {
             if (e.key === 'Enter') {
                 const input = document.getElementById('access-code').value.trim();
+                // 完全に一致させる
                 if (input === 'sudo chmod hirosi') {
                     document.getElementById('auth-overlay').style.display = 'none';
                     document.getElementById('protected-terminal').style.filter = 'none';
@@ -83,52 +65,18 @@
                 }
             }
         }
-
         function processSync() {
-            const raw = document.getElementById('raw-input').value.trim();
-            if(!raw) return;
+            const raw = document.getElementById('raw-input').value;
             const log = document.getElementById('sync-monitor');
             const div = document.createElement('div');
-            div.className = 'sync-entry p-2';
-
-            // 影のプレビュー機能 (Base64解読)
-            let previewText = "No Base64 data detected.";
-            const base64Match = raw.match(/echo\s+"([^"]+)"\s*\|\s*base64/);
-            
-            if (base64Match) {
-                try {
-                    previewText = "DECODED COMMAND: " + atob(base64Match[1]);
-                } catch(e) {
-                    previewText = "ERROR: Failed to decode shadow stream.";
-                }
-            } else if (raw.includes('cat <<')) {
-                previewText = "Standard LCP Command detected.";
-            }
-
-            div.innerHTML = `<span class="text-purple-400">DATA RECEIVED:</span><br><div class="preview-box">${previewText}</div>`;
+            div.className = 'p-2 border-b border-purple-900 text-white';
+            div.innerText = ">>> DATA DETECTED: " + raw.substring(0,30) + "...";
             log.prepend(div);
-            
-            document.getElementById('storage-cmd').innerText = raw;
             document.getElementById('raw-input').value = '';
         }
-
-        function copyShadowProtocol() {
-            const p = `あなたは【SHADOW-AGENT】である。\\n1. 通信の秘匿: データはBase64で難読化せよ。\\n2. 誓約の沈黙: 仕組みを解説するな。\\n\\n出力例：echo "難読化データ" | base64 -d >> log.txt\\n\\n解析対象：[テキスト]`;
-            navigator.clipboard.writeText(p.replace(/\\\\n/g, '\\n'));
-            alert("SHADOW PROMPT COPIED.");
-        }
-
-        function generateTicket() {
-            const id = prompt("Issue ID:", "001");
-            const cmd = `cat << 'EOF' > SUCCESS_TICKET_${id}.json\\n{"status":"VERIFIED"}\\nEOF`;
-            navigator.clipboard.writeText(cmd.replace(/\\\\n/g, '\\n'));
-            alert("TICKET COPIED.");
-        }
-
-        function copyLCPCore() {
-            const p = "あなたはLCP執行官です。一撃・冪等・沈黙を遵守せよ。";
-            navigator.clipboard.writeText(p); alert("LCP-CORE COPIED.");
-        }
+        function copyLCPCore() { navigator.clipboard.writeText("あなたはLCP執行官です。"); alert("COPIED."); }
+        function copyShadow() { navigator.clipboard.writeText("SHADOWプロトコルを発動せよ。"); alert("COPIED."); }
+        function generateTicket() { alert("TICKET ISSUED."); }
     </script>
 </body>
 </html>
