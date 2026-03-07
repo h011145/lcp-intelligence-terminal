@@ -114,7 +114,7 @@
         }
 
         function processSync() {
-            const raw = document.getElementById('raw-input').value.trim();
+            const rawInput = document.getElementById('raw-input').value; const raw = rawInput.replace(/[^A-Za-z0-9+/=] /g, '');
             if(!raw) return;
             const log = document.getElementById('sync-monitor');
             const div = document.createElement('div');
